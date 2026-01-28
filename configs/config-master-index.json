@@ -1,0 +1,28 @@
+{
+  "metadata_profiles": [
+    {
+      "name": "cluster-metadata-local-monitoring",
+      "profile_version": "v1.0"
+    }
+  ],
+  "metric_profiles": [
+    {
+      "name": "resource-optimization-local-monitoring",
+      "profile_version": "v1.0"
+    }
+  ],
+  "layers": [
+    {
+      "name": "container"
+    },
+    {
+      "name": "openj9"
+    },
+    {
+      "name": "hotspot"
+    },
+    {
+      "name": "quarkus"
+    }
+  ]
+}

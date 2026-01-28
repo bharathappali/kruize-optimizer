@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kruize-optimizer-sa
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kruize-optimizer-role
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-optimizer-binding
+subjects:
+  - kind: ServiceAccount
+    name: kruize-optimizer-sa
+    namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: kruize-optimizer-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kruize-optimizer
+  namespace: monitoring
+  labels:
+    app: kruize-optimizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kruize-optimizer
+  template:
+    metadata:
+      labels:
+        app: kruize-optimizer
+    spec:
+      serviceAccountName: kruize-optimizer-sa
+      containers:
+        - name: kruize-optimizer
+          image: quay.io/rh-ee-shesaxen/optimizer:poc_v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KRUIZE_SCAN_INTERVAL
+              value: "5m"
+            - name: KRUIZE_JOB_POLLING_INTERVAL
+              value: "1m"
+            - name: KRUIZE_URL
+              value: "http://localhost:9000"
+            - name: KRUIZE_PROFILE_GIT_URL
+              value: "local"
+            - name: KRUIZE_PROFILE_GIT_BASE_URL
+              value: "local"
+            # Configure target labels as a JSON object or array
+            # Option 1: JSON Object
+            - name: KRUIZE_TARGET_LABELS
+              value: '{"kruize/autotune": "enabled"}'
+            # Option 2: JSON Array of "key=value" strings
+            # value: '["kruize/autotune=enabled", "tier=gold"]'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kruize-optimizer
+  namespace: monitoring
+spec:
+  type: ClusterIP   
+  selector:
+    app: kruize-optimizer
+  ports:
+    - name: http
+      port: 8080        
+      targetPort: 8080  

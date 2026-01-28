@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kruize Optimizer Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, #0d6efd 0%, #0a58ca 100%);
+        }
+
+        .status-healthy {
+            color: #198754;
+            font-weight: bold;
+        }
+
+        .status-unhealthy {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Badge styling for optimization status */
+        .opt-yes {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .opt-no {
+            background-color: #f8d7da;
+            color: #842029;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .list-scrollable {
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+
+        .list-scrollable li {
+            padding: 5px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .list-scrollable li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-gauge-high me-2"></i>Kruize Optimizer</a>
+            <div class="d-flex text-white">
+                <span id="global-status" class="badge bg-secondary">Checking...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Health Cards Row 1 -->
+        <div class="row mb-4">
+            <!-- LAST CHECKED -->
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted text-uppercase mb-0">Last Checked</h6>
+                        <div class="text-primary"><i class="fa-regular fa-clock fa-2x"></i></div>
+                    </div>
+                    <h4 id="last-checked" class="mb-0 fw-bold">-</h4>
+                </div>
+            </div>
+
+            <!-- DATASOURCES -->
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted text-uppercase mb-0">Datasources</h6>
+                        <div class="text-success"><i class="fa-solid fa-database fa-2x"></i></div>
+                    </div>
+                    <div id="datasource-list" class="list-scrollable">
+                        <div class="text-muted small">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- METADATA PROFILES -->
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted text-uppercase mb-0">Metadata Profiles</h6>
+                        <div class="text-info"><i class="fa-solid fa-file-code fa-2x"></i></div>
+                    </div>
+                    <div id="metadata-profile-list" class="list-scrollable">
+                        <div class="text-muted small">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- METRIC PROFILES -->
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted text-uppercase mb-0">Metric Profiles</h6>
+                        <div class="text-warning"><i class="fa-solid fa-chart-line fa-2x"></i></div>
+                    </div>
+                    <div id="metric-profile-list" class="list-scrollable">
+                        <div class="text-muted small">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Cards Row 2 (Layers & RuleSets) -->
+        <div class="row mb-4">
+            <!-- LAYERS -->
+            <div class="col-md-6">
+                <div class="card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted text-uppercase mb-0">Layers</h6>
+                        <div class="text-secondary"><i class="fa-solid fa-layer-group fa-2x"></i></div>
+                    </div>
+                    <div id="layer-list" class="list-scrollable">
+                        <div class="text-muted small">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RULESETS -->
+            <div class="col-md-6">
+                <div class="card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted text-uppercase mb-0">RuleSets</h6>
+                        <div class="text-dark"><i class="fa-solid fa-list-check fa-2x"></i></div>
+                    </div>
+                    <div id="ruleset-list" class="list-scrollable">
+                        <div class="text-muted small">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 h-100 text-center border-primary">
+                    <h6 class="text-muted text-uppercase">Total Jobs Created</h6>
+                    <h2 id="total-jobs-created" class="text-primary fw-bold">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 h-100 text-center border-success">
+                    <h6 class="text-muted text-uppercase">Total Exp. Created</h6>
+                    <h2 id="total-experiments-created" class="text-success fw-bold">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 h-100 text-center border-info">
+                    <h6 class="text-muted text-uppercase">Total Exp. Processed</h6>
+                    <h2 id="total-experiments-processed" class="text-info fw-bold">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div id="alerts-container" class="mb-4" style="display:none;">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Issues Found
+                </div>
+                <ul class="list-group list-group-flush" id="issues-list">
+                </ul>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="showAllSwitch" onchange="refreshWorkloads()">
+                <label class="form-check-label" for="showAllSwitch">Show All Workloads</label>
+            </div>
+            <div>
+                <button class="btn btn-warning" onclick="installProfiles()"><i
+                        class="fa-solid fa-wrench me-2"></i>Install Missing Profiles / Layers / RuleSets</button>
+                <button class="btn btn-primary" onclick="refreshKruizeStatus()"><i
+                        class="fa-solid fa-rotate me-2"></i>Refresh Kruize Status</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- NAMESPACES TABLE -->
+            <div class="col-12 mb-4">
+                <div class="card p-3">
+                    <h4><i class="fa-solid fa-layer-group me-2"></i>Namespaces Scanner</h4>
+                    <div class="table-responsive">
+                        <table id="namespacesTable" class="table table-striped table-hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Namespace</th>
+                                    <th>Kruize Optimized?</th>
+                                    <th>Action 1</th>
+                                    <th>Action 2</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKLOADS TABLE -->
+            <div class="col-12">
+                <div class="card p-3">
+                    <h4><i class="fa-solid fa-cubes me-2"></i>Workloads Scanner</h4>
+                    <div class="table-responsive">
+                        <table id="workloadsTable" class="table table-striped table-hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Namespace</th>
+                                    <th>Workload</th>
+                                    <th>Type</th>
+                                    <th>Containers</th>
+                                    <th>Kruize Optimized?</th>
+                                    <th>Action 1</th>
+                                    <th>Action 2</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        let nsTable, wlTable;
+
+        $(document).ready(function () {
+            // Initialize DataTables
+            nsTable = $('#namespacesTable').DataTable();
+            wlTable = $('#workloadsTable').DataTable();
+
+            // Initial Data Load
+            refreshKruizeStatus();
+            refreshWorkloads();
+        });
+
+        // 1. Fetch Health Status Only
+        async function refreshKruizeStatus() {
+            try {
+                const healthRes = await fetch('/health/kruize');
+                const health = await healthRes.json();
+
+                // Update Status Badge
+                const badge = $('#global-status');
+                badge.text(health.status);
+                if (health.status === 'HEALTHY') {
+                    badge.removeClass('bg-secondary bg-danger').addClass('bg-success');
+                    $('#alerts-container').hide();
+                } else {
+                    badge.removeClass('bg-secondary bg-success').addClass('bg-danger');
+
+                    // Show Issues
+                    const issuesList = $('#issues-list');
+                    issuesList.empty();
+                    if (health.issues) {
+                        health.issues.forEach(issue => {
+                            // Use escaped template literal for Qute compatibility
+                            issuesList.append(`<li class="list-group-item text-danger">$\{issue}</li>`);
+                        });
+                    }
+                    $('#alerts-container').show();
+                }
+
+                $('#last-checked').text(health.lastCheckedAt ? new Date(health.lastCheckedAt).toLocaleTimeString() : '-');
+
+                // Render Lists
+                renderList('#datasource-list', health.datasources, (item) => item);
+                renderList('#metadata-profile-list', health.metadata_profiles, (p) => `<strong>$\{p.name}</strong> <span class="badge bg-light text-dark">v$\{p.profile_version}</span>`);
+                renderList('#metric-profile-list', health.metric_profiles, (p) => `<strong>$\{p.name}</strong> <span class="badge bg-light text-dark">v$\{p.profile_version}</span>`);
+                renderList('#layer-list', health.layers, (p) => `<strong>$\{p.name}</strong>`);
+                renderList('#ruleset-list', health.rulesets, (p) => `<strong>$\{p.name}</strong>`);
+
+                // Update Metrics
+                if (health.stats) {
+                    $('#total-jobs-created').text(health.stats.total_jobs_created || 0);
+                    $('#total-experiments-created').text(health.stats.total_experiments_created || 0);
+                    $('#total-experiments-processed').text(health.stats.total_experiments_processed || 0);
+                }
+
+            } catch (e) {
+                console.error("Health check failed", e);
+            }
+        }
+
+        function renderList(selector, items, formatter) {
+            const container = $(selector);
+            container.empty();
+            const list = $('<ul class="list-unstyled mb-0"></ul>');
+
+            if (items && items.length > 0) {
+                items.forEach(item => {
+                    list.append(`<li>$\{formatter(item)}</li>`);
+                });
+            } else {
+                list.append('<li class="text-muted small">None found</li>');
+            }
+            container.append(list);
+        }
+
+        // 2. Fetch Workloads (Large Payload)
+        async function refreshWorkloads() {
+            // CHECKBOX STATE
+            const showAll = $('#showAllSwitch').is(':checked');
+            const url = showAll ? '/scan?all=true' : '/scan';
+
+            try {
+                const scanRes = await fetch(url);
+                const scan = await scanRes.json();
+
+                // Populate Namespaces Table
+                nsTable.clear();
+                if (scan.namespaces) {
+                    scan.namespaces.forEach(ns => {
+                        const optBadge = ns.kruizeOptimized
+                            ? '<span class="opt-yes">Yes</span>'
+                            : '<span class="opt-no">No</span>';
+
+                        nsTable.row.add([
+                            ns.name,
+                            optBadge,
+                            '<button class="btn btn-sm btn-outline-secondary">Action 1</button>',
+                            '<button class="btn btn-sm btn-outline-primary">Action 2</button>'
+                        ]);
+                    });
+                }
+                nsTable.draw();
+
+                // Populate Workloads Table
+                wlTable.clear();
+                // The API returns 'workloads', ensuring we check that property
+                const workloads = scan.workloads || scan.deployments;
+                if (workloads) {
+                    workloads.forEach(w => {
+                        const optBadge = w.kruizeOptimized
+                            ? '<span class="opt-yes">Yes</span>'
+                            : '<span class="opt-no">No</span>';
+
+                        // Format Containers
+                        let containersHtml = '<ul class="mb-0 ps-3 small">';
+                        if (w.containers) {
+                            w.containers.forEach(c => {
+                                containersHtml += `<li><strong>$\{c.name}</strong> <span class="text-muted">($\{c.image})</span></li>`;
+                            });
+                        }
+                        containersHtml += '</ul>';
+
+                        wlTable.row.add([
+                            w.namespace,
+                            w.name,
+                            w.type || 'Deployment', // Default if missing
+                            containersHtml,
+                            optBadge,
+                            '<button class="btn btn-sm btn-outline-secondary">Action 1</button>',
+                            '<button class="btn btn-sm btn-outline-primary">Action 2</button>'
+                        ]);
+                    });
+                }
+                wlTable.draw();
+
+            } catch (e) {
+                console.error("Scan failed", e);
+            }
+        }
+
+        async function installProfiles() {
+            if (!confirm("Attempt to install missing profiles via Kruize API?")) return;
+
+            try {
+                const res = await fetch('/profiles/install', { method: 'POST' });
+                await res.json();
+                alert("Installation process completed. Checking Kruize status...");
+                refreshKruizeStatus();
+            } catch (e) {
+                alert("Installation failed: " + e);
+            }
+        }
+    </script>
+</body>
+
+</html>
