@@ -1,8 +1,9 @@
-# kruize-optimizer
+# Kruize Optimizer
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+> ### Tag It | Forget It | Optimize It 
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+A lightweight Quarkus‑based microservice that automates configuration, experiment creation, profile validation, and health orchestration for Kruize Autotune, simplifying the experience for SREs and Platform Engineers.
+
 
 ## Running the application in dev mode
 
@@ -12,7 +13,6 @@ You can run your application in dev mode that enables live coding using:
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
 
 ## Packaging and running the application
 
@@ -64,25 +64,3 @@ If you want to learn more about building native executables, please consult <htt
 - Logging JSON ([guide](https://quarkus.io/guides/logging#json-logging)): Add JSON formatter for console logging
 - YAML Configuration ([guide](https://quarkus.io/guides/config-yaml)): Use YAML to configure your Quarkus application
 - Micrometer Registry Prometheus ([guide](https://quarkus.io/guides/micrometer)): Enable Prometheus support for Micrometer
-
-## Provided Code
-
-### YAML Config
-
-Configure your application with YAML
-
-[Related guide section...](https://quarkus.io/guides/config-reference#configuration-examples)
-
-The Quarkus application configuration is located in `src/main/resources/application.yml`.
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
-
-### REST Qute
-
-Create your web page using Quarkus REST and Qute
-
-[Related guide section...](https://quarkus.io/guides/qute#type-safe-templates)
