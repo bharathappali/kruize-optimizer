@@ -286,6 +286,8 @@ public class ProfileService {
                             }
                         }
                         break;
+                    default:
+                        throw new IllegalArgumentException("Unknown profile type: " + profileType);
                 }
             }
         } catch (Exception e) {
@@ -310,7 +312,7 @@ public class ProfileService {
             case ProfileType.LAYER:
                 return getLayers();
             default:
-                return Collections.emptyList();
+                throw new IllegalArgumentException("Unknown profile type: " + profileType);
         }
     }
 }
