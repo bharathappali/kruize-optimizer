@@ -15,24 +15,20 @@ quarkus:
         enabled: false
         pretty-print: false
 
-  # --- Rest Client Config ---
-  rest-client:
-    kruize-api:
-      # URL of the Kruize Autotune service
-      # In k8s: http://<service-name>.<namespace>:<port>
-      url: ${KRUIZE_URL:http://kruize:8080}
-
 # --- Kruize Optimizer Configuration ---
 kruize:
-  scan:
-    # Frequency to scan K8s for new workloads (cron format or duration)
-    interval: ${KRUIZE_SCAN_INTERVAL:15m}
-  profile:
-    git:
-      # Reference for profile index
-      reference-url: ${KRUIZE_PROFILE_GIT_URL:local}
-      # Base URL for fetching raw manifests
-      base-url: ${KRUIZE_PROFILE_GIT_BASE_URL:local}
+  # URL of the Kruize Autotune service
+  # In k8s: http://<service-name>.<namespace>:<port>
+  url: ${KRUIZE_URL:http://kruize:8080}
+  bulk:
+    scheduler:
+      # Interval to call bulk API (cron format or duration)
+      interval: ${KRUIZE_BULK_SCHEDULER_INTERVAL:15m}
+      # Measurement duration for bulk API calls
+      measurement-duration: ${KRUIZE_BULK_MEASUREMENT_DURATION:15min}
+  webhook:
+    # Webhook URL for bulk API callbacks
+    url: ${KRUIZE_WEBHOOK_URL:http://optimizer:8080/webhook}
   target:
     labels:
       # Max number of labels to process

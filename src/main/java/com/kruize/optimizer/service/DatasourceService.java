@@ -16,9 +16,11 @@
 package com.kruize.optimizer.service;
 
 import com.kruize.optimizer.client.KruizeClient;
+import com.kruize.optimizer.exception.KruizeServiceException;
 import com.kruize.optimizer.model.api.DatasourceListResponse;
 import com.kruize.optimizer.model.kruize.Datasource;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
+import jakarta.ws.rs.core.Response;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -55,8 +57,12 @@ public class DatasourceService {
                     .orElse(Collections.emptyList());
                     
         } catch (Exception e) {
-            LOG.error(MessageConstants.ERROR_FETCHING_DATASOURCES, e);
-            throw new RuntimeException(MessageConstants.ERROR_FETCHING_DATASOURCES, e);
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         }
     }
 

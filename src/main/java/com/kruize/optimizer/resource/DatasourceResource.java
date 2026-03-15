@@ -75,5 +75,3 @@ public class DatasourceResource {
         }
     }
 }
-
-// Made with Bob

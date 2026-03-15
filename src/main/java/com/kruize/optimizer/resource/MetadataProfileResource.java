@@ -102,5 +102,3 @@ public class MetadataProfileResource {
         }
     }
 }
-
-// Made with Bob

@@ -102,5 +102,3 @@ public class MetricProfileResource {
         }
     }
 }
-
-// Made with Bob

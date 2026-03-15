@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * REST client interface for Kruize API
  */
-@RegisterRestClient(configKey = "kruize-api")
+@RegisterRestClient(baseUri = "${kruize.url}")
 public interface KruizeClient {
 
     @GET
@@ -69,6 +69,15 @@ public interface KruizeClient {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     String createLayer(Object layerDefinition);
-}
 
-// Made with Bob
+    @POST
+    @Path(OptimizerConstants.KruizeClientConstants.BULK_ENDPOINT)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    String bulkCreateExperiments(Object bulkRequest);
+
+    @GET
+    @Path(OptimizerConstants.KruizeClientConstants.BULK_ENDPOINT)
+    @Produces(MediaType.APPLICATION_JSON)
+    String getBulkJobStatus(@QueryParam(OptimizerConstants.KruizeClientConstants.JOB_ID) String jobId);
+}

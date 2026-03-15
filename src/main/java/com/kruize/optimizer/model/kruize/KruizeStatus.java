@@ -125,23 +125,13 @@ public class KruizeStatus {
      * Nested class for profile status
      */
     public static class ProfileStatus {
-        private int count;
         private List<ProfileInfo> installed;
 
         public ProfileStatus() {
         }
 
-        public ProfileStatus(int count, List<ProfileInfo> installed) {
-            this.count = count;
+        public ProfileStatus(List<ProfileInfo> installed) {
             this.installed = installed;
-        }
-
-        public int getCount() {
-            return count;
-        }
-
-        public void setCount(int count) {
-            this.count = count;
         }
 
         public List<ProfileInfo> getInstalled() {
@@ -187,5 +177,3 @@ public class KruizeStatus {
         }
     }
 }
-
-// Made with Bob

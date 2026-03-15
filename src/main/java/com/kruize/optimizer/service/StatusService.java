@@ -40,6 +40,9 @@ public class StatusService {
     @Inject
     ProfileService profileService;
 
+    @Inject
+    KruizeStateService kruizeStateService;
+
     /**
      * Get comprehensive Kruize system status
      *
@@ -49,8 +52,11 @@ public class StatusService {
         KruizeStatus status = new KruizeStatus();
 
         try {
-            // Get datasources
-            List<Datasource> datasources = datasourceService.getDatasources();
+            // Refresh the global state cache
+            kruizeStateService.refreshState();
+
+            // Get datasources from cache
+            List<Datasource> datasources = kruizeStateService.getCachedDatasources();
             status.setDatasources(new KruizeStatus.DatasourceStatus(
                     datasources.size(),
                     datasources
@@ -59,21 +65,18 @@ public class StatusService {
             // Get metadata profiles
             List<KruizeProfile> metadataProfiles = profileService.getMetadataProfiles(false);
             status.setMetadataProfiles(new KruizeStatus.ProfileStatus(
-                    metadataProfiles.size(),
                     convertToProfileInfo(metadataProfiles)
             ));
 
             // Get metric profiles
             List<KruizeProfile> metricProfiles = profileService.getMetricProfiles(false);
             status.setMetricProfiles(new KruizeStatus.ProfileStatus(
-                    metricProfiles.size(),
                     convertToProfileInfo(metricProfiles)
             ));
 
             // Get layers
             List<KruizeProfile> layers = profileService.getLayers();
             status.setLayers(new KruizeStatus.ProfileStatus(
-                    layers.size(),
                     convertToProfileInfo(layers)
             ));
 
@@ -123,5 +126,3 @@ public class StatusService {
         return datasourceService.isKruizeAvailable();
     }
 }
-
-// Made with Bob

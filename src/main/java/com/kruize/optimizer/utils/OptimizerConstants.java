@@ -131,4 +131,26 @@ public final class OptimizerConstants {
         public static final String METRIC = "metric";
         public static final String LAYER = "layer";
     }
+
+    // contains profile path constants
+    public static final class ProfilePathConstants {
+
+        private ProfilePathConstants() {
+            throw new UnsupportedOperationException("Utility class");
+        }
+
+        public static final String CONFIGS_BASE_PATH = "configs/";
+        public static final String CONFIGS_INDEX_FILE = "configs/configsReferenceIndex.json";
+        public static final String METADATA_PROFILES_DIR = "/metadata-profiles/";
+        public static final String METRIC_PROFILES_DIR = "/metric-profiles/";
+        public static final String LAYERS_DIR = "configs/layers/";
+        public static final String JSON_EXTENSION = ".json";
+        
+        // JSON field names in configsReferenceIndex.json
+        public static final String METADATA_PROFILES_KEY = "metadata_profiles";
+        public static final String METRIC_PROFILES_KEY = "metric_profiles";
+        public static final String LAYERS_KEY = "layers";
+        public static final String NAME_KEY = "name";
+        public static final String PROFILE_VERSION_KEY = "profile_version";
+    }
 }

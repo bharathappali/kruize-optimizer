@@ -101,5 +101,3 @@ public class LayerResource {
         }
     }
 }
-
-// Made with Bob

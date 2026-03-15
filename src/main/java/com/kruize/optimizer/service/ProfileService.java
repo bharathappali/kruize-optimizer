@@ -17,9 +17,12 @@ package com.kruize.optimizer.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
+import com.kruize.optimizer.exception.KruizeServiceException;
 import com.kruize.optimizer.model.kruize.KruizeProfile;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.ProfileType;
+import com.kruize.optimizer.utils.OptimizerConstants.ProfilePathConstants;
+import jakarta.ws.rs.core.Response;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -29,6 +32,7 @@ import org.jboss.logging.Logger;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Service for managing Kruize profiles (metadata, metric, layers)
@@ -41,9 +45,6 @@ public class ProfileService {
     @Inject
     @RestClient
     KruizeClient kruizeClient;
-
-    @ConfigProperty(name = "kruize.profile.git.base-url", defaultValue = "local")
-    String profileBaseUrl;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -59,8 +60,12 @@ public class ProfileService {
             return Optional.ofNullable(kruizeClient.getMetadataProfiles(verbose))
                     .orElse(Collections.emptyList());
         } catch (Exception e) {
-            LOG.error(MessageConstants.ERROR_FETCHING_PROFILES, e);
-            throw new RuntimeException(MessageConstants.ERROR_FETCHING_PROFILES, e);
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         }
     }
 
@@ -76,8 +81,12 @@ public class ProfileService {
             return Optional.ofNullable(kruizeClient.getMetricProfiles(verbose))
                     .orElse(Collections.emptyList());
         } catch (Exception e) {
-            LOG.error(MessageConstants.ERROR_FETCHING_PROFILES, e);
-            throw new RuntimeException(MessageConstants.ERROR_FETCHING_PROFILES, e);
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         }
     }
 
@@ -92,8 +101,12 @@ public class ProfileService {
             return Optional.ofNullable(kruizeClient.getLayers())
                     .orElse(Collections.emptyList());
         } catch (Exception e) {
-            LOG.error(MessageConstants.ERROR_FETCHING_PROFILES, e);
-            throw new RuntimeException(MessageConstants.ERROR_FETCHING_PROFILES, e);
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         }
     }
 
@@ -114,13 +127,16 @@ public class ProfileService {
                     .collect(Collectors.toSet());
 
             // Get available profiles from local repository
-            List<String> availableProfiles = getAvailableProfilesFromLocal(profileType);
+            Map<String, String> availableProfiles = getAvailableProfilesFromLocal(profileType);
 
             // Install missing profiles
-            for (String profileName : availableProfiles) {
+            for (Map.Entry<String, String> entry : availableProfiles.entrySet()) {
+                String profileName = entry.getKey();
+                String profileVersion = entry.getValue();
+                
                 if (!installedNames.contains(profileName)) {
                     try {
-                        installProfile(profileType, profileName);
+                        installProfile(profileType, profileName, profileVersion);
                         results.add("Installed: " + profileName);
                         LOG.info("Successfully installed profile: " + profileName);
                     } catch (Exception e) {
@@ -146,10 +162,11 @@ public class ProfileService {
      *
      * @param profileType type of profile
      * @param profileName name of the profile
+     * @param profileVersion version of the profile (null for layers)
      */
-    private void installProfile(String profileType, String profileName) {
+    private void installProfile(String profileType, String profileName, String profileVersion) {
         try {
-            Object profileDefinition = loadProfileFromLocal(profileType, profileName);
+            Object profileDefinition = loadProfileFromLocal(profileType, profileName, profileVersion);
             
             switch (profileType) {
                 case ProfileType.METADATA:
@@ -174,11 +191,12 @@ public class ProfileService {
      *
      * @param profileType type of profile
      * @param profileName name of the profile
+     * @param profileVersion version of the profile (null for layers)
      * @return profile definition as Object
      */
-    private Object loadProfileFromLocal(String profileType, String profileName) {
+    private Object loadProfileFromLocal(String profileType, String profileName, String profileVersion) {
         try {
-            String resourcePath = getResourcePath(profileType, profileName);
+            String resourcePath = getResourcePath(profileType, profileName, profileVersion);
             LOG.info("Loading profile from: " + resourcePath);
             
             try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
@@ -197,43 +215,81 @@ public class ProfileService {
      *
      * @param profileType type of profile
      * @param profileName name of the profile
+     * @param profileVersion version of the profile (null for layers)
      * @return resource path
      */
-    private String getResourcePath(String profileType, String profileName) {
-        String basePath = "configs/v1.0/";
+    private String getResourcePath(String profileType, String profileName, String profileVersion) {
         switch (profileType) {
             case ProfileType.METADATA:
-                return basePath + "metadata-profiles/" + profileName + ".json";
+                return ProfilePathConstants.CONFIGS_BASE_PATH + profileVersion +
+                       ProfilePathConstants.METADATA_PROFILES_DIR + profileName +
+                       ProfilePathConstants.JSON_EXTENSION;
             case ProfileType.METRIC:
-                return basePath + "metric-profiles/" + profileName + ".json";
+                return ProfilePathConstants.CONFIGS_BASE_PATH + profileVersion +
+                       ProfilePathConstants.METRIC_PROFILES_DIR + profileName +
+                       ProfilePathConstants.JSON_EXTENSION;
             case ProfileType.LAYER:
-                return basePath + "layers/" + profileName + ".json";
+                return ProfilePathConstants.LAYERS_DIR + profileName +
+                       ProfilePathConstants.JSON_EXTENSION;
             default:
                 throw new IllegalArgumentException("Unknown profile type: " + profileType);
         }
     }
 
     /**
-     * Get list of available profiles from local repository
+     * Get list of available profiles from local repository by reading configsReferenceIndex.json
      *
      * @param profileType type of profile
-     * @return list of profile names
+     * @return map of profile names to versions (version is null for layers)
      */
-    private List<String> getAvailableProfilesFromLocal(String profileType) {
-        // For now, return hardcoded list based on standard profiles
-        // In production, this could scan the resources directory
-        List<String> profiles = new ArrayList<>();
+    private Map<String, String> getAvailableProfilesFromLocal(String profileType) {
+        Map<String, String> profiles = new LinkedHashMap<>();
         
-        switch (profileType) {
-            case ProfileType.METADATA:
-                profiles.add("cluster-metadata-local-monitoring");
-                break;
-            case ProfileType.METRIC:
-                profiles.add("resource-optimization-local-monitoring");
-                break;
-            case ProfileType.LAYER:
-                profiles.addAll(Arrays.asList("container", "hotspot", "openj9", "quarkus"));
-                break;
+        try {
+            try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(
+                    ProfilePathConstants.CONFIGS_INDEX_FILE)) {
+                if (inputStream == null) {
+                    LOG.warn("configsReferenceIndex.json not found, returning empty list");
+                    return profiles;
+                }
+                
+                JsonNode rootNode = objectMapper.readTree(inputStream);
+                JsonNode profilesNode = null;
+                
+                switch (profileType) {
+                    case ProfileType.METADATA:
+                        profilesNode = rootNode.get(ProfilePathConstants.METADATA_PROFILES_KEY);
+                        if (profilesNode != null && profilesNode.isArray()) {
+                            for (JsonNode profileNode : profilesNode) {
+                                String name = profileNode.get(ProfilePathConstants.NAME_KEY).asText();
+                                String version = profileNode.get(ProfilePathConstants.PROFILE_VERSION_KEY).asText();
+                                profiles.put(name, version);
+                            }
+                        }
+                        break;
+                    case ProfileType.METRIC:
+                        profilesNode = rootNode.get(ProfilePathConstants.METRIC_PROFILES_KEY);
+                        if (profilesNode != null && profilesNode.isArray()) {
+                            for (JsonNode profileNode : profilesNode) {
+                                String name = profileNode.get(ProfilePathConstants.NAME_KEY).asText();
+                                String version = profileNode.get(ProfilePathConstants.PROFILE_VERSION_KEY).asText();
+                                profiles.put(name, version);
+                            }
+                        }
+                        break;
+                    case ProfileType.LAYER:
+                        profilesNode = rootNode.get(ProfilePathConstants.LAYERS_KEY);
+                        if (profilesNode != null && profilesNode.isArray()) {
+                            for (JsonNode layerNode : profilesNode) {
+                                String name = layerNode.asText();
+                                profiles.put(name, null); // Layers don't have versions
+                            }
+                        }
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Error reading configsReferenceIndex.json", e);
         }
         
         return profiles;
@@ -259,4 +315,3 @@ public class ProfileService {
     }
 }
 
-// Made with Bob
