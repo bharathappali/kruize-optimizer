@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * REST client interface for Kruize API
  */
-@RegisterRestClient(baseUri = "${kruize.url}")
+@RegisterRestClient(configKey = "kruize-api")
 public interface KruizeClient {
 
     @GET
