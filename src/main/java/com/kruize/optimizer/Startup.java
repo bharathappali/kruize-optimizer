@@ -15,9 +15,11 @@
  *******************************************************************************/
 package com.kruize.optimizer;
 
+import com.kruize.optimizer.service.BulkSchedulerService;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
@@ -28,12 +30,19 @@ public class Startup {
 
     private static final Logger LOG = Logger.getLogger(Startup.class);
 
+    @Inject
+    BulkSchedulerService bulkSchedulerService;
+
     /**
      * Executes at the end of application startup.
-     * 
+     * Initializes the bulk scheduler by refreshing state and installing missing profiles.
+     *
      * @param ev The Quarkus StartupEvent.
      */
     void onStart(@Observes StartupEvent ev) {
         LOG.info("Kruize Optimizer Service is STARTED!");
+        
+        // Initialize bulk scheduler (refresh state and install missing profiles)
+        bulkSchedulerService.initialize();
     }
 }
