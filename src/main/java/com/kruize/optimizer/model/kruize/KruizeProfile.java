@@ -18,6 +18,12 @@ package com.kruize.optimizer.model.kruize;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonParser;
+import java.io.IOException;
 
 /**
  * Model representing a Kruize profile (metadata, metric, or layer)
@@ -25,12 +31,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KruizeProfile {
 
+    @JsonProperty("name")
+    @JsonAlias({"metadata"})
+    @JsonDeserialize(using = NameDeserializer.class)
     private String name;
-    private Metadata metadata;
 
     @JsonProperty("profile_version")
-    @JsonAlias({"version"})
+    @JsonDeserialize(using = ProfileVersionDeserializer.class)
     private String profileVersion;
+
+    @JsonProperty("profile_type")
+    private String profileType;
 
     public KruizeProfile() {
     }
@@ -38,6 +49,12 @@ public class KruizeProfile {
     public KruizeProfile(String name, String profileVersion) {
         this.name = name;
         this.profileVersion = profileVersion;
+    }
+
+    public KruizeProfile(String name, String profileVersion, String profileType) {
+        this.name = name;
+        this.profileVersion = profileVersion;
+        this.profileType = profileType;
     }
 
     public String getName() {
@@ -48,14 +65,6 @@ public class KruizeProfile {
         this.name = name;
     }
 
-    public Metadata getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Metadata metadata) {
-        this.metadata = metadata;
-    }
-
     public String getProfileVersion() {
         return profileVersion;
     }
@@ -64,42 +73,54 @@ public class KruizeProfile {
         this.profileVersion = profileVersion;
     }
 
+    public String getProfileType() {
+        return profileType;
+    }
+
+    public void setProfileType(String profileType) {
+        this.profileType = profileType;
+    }
+
     @Override
     public String toString() {
         return "KruizeProfile{" +
                 "name='" + name + '\'' +
-                ", metadata=" + metadata +
                 ", profileVersion='" + profileVersion + '\'' +
+                ", profileType='" + profileType + '\'' +
                 '}';
     }
 
     /**
-     * Nested metadata class for profiles
+     * Custom deserializer to extract name from metadata object or direct name field
      */
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Metadata {
-        private String name;
-
-        public Metadata() {
-        }
-
-        public Metadata(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
+    public static class NameDeserializer extends JsonDeserializer<String> {
         @Override
-        public String toString() {
-            return "Metadata{" +
-                    "name='" + name + '\'' +
-                    '}';
+        public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            JsonNode node = p.getCodec().readTree(p);
+            
+            // If it's a string, return it directly
+            if (node.isTextual()) {
+                return node.asText();
+            }
+            
+            // If it's an object (metadata), extract the name field
+            if (node.isObject() && node.has("name")) {
+                return node.get("name").asText();
+            }
+            
+            return null;
+        }
+    }
+
+    /**
+     * Custom deserializer to handle both numeric and string profile versions
+     * Simply converts any value to string representation
+     */
+    public static class ProfileVersionDeserializer extends JsonDeserializer<String> {
+        @Override
+        public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            // Just convert whatever value to string
+            return p.getValueAsString();
         }
     }
 }

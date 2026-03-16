@@ -63,13 +63,13 @@ public class StatusService {
             ));
 
             // Get metadata profiles
-            List<KruizeProfile> metadataProfiles = profileService.getMetadataProfiles(false);
+            List<KruizeProfile> metadataProfiles = profileService.getMetadataProfiles();
             status.setMetadataProfiles(new KruizeStatus.ProfileStatus(
                     convertToProfileInfo(metadataProfiles)
             ));
 
             // Get metric profiles
-            List<KruizeProfile> metricProfiles = profileService.getMetricProfiles(false);
+            List<KruizeProfile> metricProfiles = profileService.getMetricProfiles();
             status.setMetricProfiles(new KruizeStatus.ProfileStatus(
                     convertToProfileInfo(metricProfiles)
             ));
@@ -111,7 +111,7 @@ public class StatusService {
     private List<KruizeStatus.ProfileInfo> convertToProfileInfo(List<KruizeProfile> profiles) {
         return profiles.stream()
                 .map(p -> new KruizeStatus.ProfileInfo(
-                        p.getMetadata() != null ? p.getMetadata().getName() : p.getName(),
+                        p.getName(),
                         p.getProfileVersion()
                 ))
                 .collect(Collectors.toList());

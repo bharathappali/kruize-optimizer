@@ -28,6 +28,7 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 
 import java.io.InputStream;
 import java.util.*;
@@ -50,15 +51,39 @@ public class ProfileService {
 
     /**
      * Get metadata profiles from Kruize
+     * Always fetches with verbose=true to get profile_version
      *
-     * @param verbose include detailed information
      * @return List of metadata profiles
      */
-    public List<KruizeProfile> getMetadataProfiles(boolean verbose) {
+    public List<KruizeProfile> getMetadataProfiles() {
         try {
             LOG.info("Fetching metadata profiles from Kruize");
-            return Optional.ofNullable(kruizeClient.getMetadataProfiles(verbose))
+            // Always use verbose=true to get profile_version in response
+            List<KruizeProfile> profiles = Optional.ofNullable(kruizeClient.getMetadataProfiles(true))
                     .orElse(Collections.emptyList());
+            // Set profile type for each profile
+            profiles.forEach(p -> p.setProfileType(ProfileType.METADATA));
+            return profiles;
+        } catch (ClientWebApplicationException e) {
+            // Check if this is a "No metadata profiles found" error (400 status)
+            // TODO: remove this when issue 1849 is fixed
+            if (e.getResponse().getStatus() == 400) {
+                try {
+                    String responseBody = e.getResponse().readEntity(String.class);
+                    if (responseBody != null && responseBody.contains("No metadata profiles found!")) {
+                        LOG.info("No metadata profiles found in Kruize, returning empty list");
+                        return Collections.emptyList();
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("Failed to read response body", ex);
+                }
+            }
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         } catch (Exception e) {
             LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
             throw new KruizeServiceException(
@@ -71,15 +96,39 @@ public class ProfileService {
 
     /**
      * Get metric profiles from Kruize
+     * Always fetches with verbose=true to get profile_version
      *
-     * @param verbose include detailed information
      * @return List of metric profiles
      */
-    public List<KruizeProfile> getMetricProfiles(boolean verbose) {
+    public List<KruizeProfile> getMetricProfiles() {
         try {
             LOG.info("Fetching metric profiles from Kruize");
-            return Optional.ofNullable(kruizeClient.getMetricProfiles(verbose))
+            // Always use verbose=true to get profile_version in response
+            List<KruizeProfile> profiles = Optional.ofNullable(kruizeClient.getMetricProfiles(true))
                     .orElse(Collections.emptyList());
+            // Set profile type for each profile
+            profiles.forEach(p -> p.setProfileType(ProfileType.METRIC));
+            return profiles;
+        } catch (ClientWebApplicationException e) {
+            // Check if this is a "No metric profiles found" error (400 status)
+            // TODO: remove this when issue 1849 is fixed
+            if (e.getResponse().getStatus() == 400) {
+                try {
+                    String responseBody = e.getResponse().readEntity(String.class);
+                    if (responseBody != null && responseBody.contains("No metric profiles found!")) {
+                        LOG.info("No metric profiles found in Kruize, returning empty list");
+                        return Collections.emptyList();
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("Failed to read response body", ex);
+                }
+            }
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         } catch (Exception e) {
             LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
             throw new KruizeServiceException(
@@ -98,8 +147,31 @@ public class ProfileService {
     public List<KruizeProfile> getLayers() {
         try {
             LOG.info("Fetching layers from Kruize");
-            return Optional.ofNullable(kruizeClient.getLayers())
+            List<KruizeProfile> layers = Optional.ofNullable(kruizeClient.getLayers())
                     .orElse(Collections.emptyList());
+            // Set profile type for each layer
+            layers.forEach(p -> p.setProfileType(ProfileType.LAYER));
+            return layers;
+        } catch (ClientWebApplicationException e) {
+            // Check if this is a "No layers found" error (400 status)
+            // TODO: remove this when issue 1849 is fixed
+            if (e.getResponse().getStatus() == 400) {
+                try {
+                    String responseBody = e.getResponse().readEntity(String.class);
+                    if (responseBody != null && responseBody.contains("No layers found!")) {
+                        LOG.info("No layers found in Kruize, returning empty list");
+                        return Collections.emptyList();
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("Failed to read response body", ex);
+                }
+            }
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                e,
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
         } catch (Exception e) {
             LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
             throw new KruizeServiceException(
@@ -123,7 +195,7 @@ public class ProfileService {
             // Get installed profiles
             List<KruizeProfile> installedProfiles = getInstalledProfiles(profileType);
             Set<String> installedNames = installedProfiles.stream()
-                    .map(p -> p.getMetadata() != null ? p.getMetadata().getName() : p.getName())
+                    .map(KruizeProfile::getName)
                     .collect(Collectors.toSet());
 
             // Get available profiles from local repository
@@ -306,9 +378,9 @@ public class ProfileService {
     private List<KruizeProfile> getInstalledProfiles(String profileType) {
         switch (profileType) {
             case ProfileType.METADATA:
-                return getMetadataProfiles(false);
+                return getMetadataProfiles();
             case ProfileType.METRIC:
-                return getMetricProfiles(false);
+                return getMetricProfiles();
             case ProfileType.LAYER:
                 return getLayers();
             default:

@@ -44,16 +44,15 @@ public class MetadataProfileResource {
      * List all metadata profiles
      * GET /kruize/metadataProfiles/list
      *
-     * @param verbose include detailed information
      * @return Response with list of metadata profiles
      */
     @GET
     @Path(OptimizerApiConstants.LIST_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listMetadataProfiles(@QueryParam("verbose") @DefaultValue("false") boolean verbose) {
+    public Response listMetadataProfiles() {
         try {
             LOG.info("Fetching metadata profiles list");
-            List<KruizeProfile> profiles = profileService.getMetadataProfiles(verbose);
+            List<KruizeProfile> profiles = profileService.getMetadataProfiles();
             
             if (profiles.isEmpty()) {
                 return Response.ok(ApiResponse.success(

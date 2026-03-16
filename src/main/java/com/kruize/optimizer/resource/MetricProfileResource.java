@@ -44,16 +44,15 @@ public class MetricProfileResource {
      * List all metric profiles
      * GET /kruize/metricProfiles/list
      *
-     * @param verbose include detailed information
      * @return Response with list of metric profiles
      */
     @GET
     @Path(OptimizerApiConstants.LIST_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listMetricProfiles(@QueryParam("verbose") @DefaultValue("false") boolean verbose) {
+    public Response listMetricProfiles() {
         try {
             LOG.info("Fetching metric profiles list");
-            List<KruizeProfile> profiles = profileService.getMetricProfiles(verbose);
+            List<KruizeProfile> profiles = profileService.getMetricProfiles();
             
             if (profiles.isEmpty()) {
                 return Response.ok(ApiResponse.success(
