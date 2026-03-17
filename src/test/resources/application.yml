@@ -1,0 +1,48 @@
+# Test configuration for Kruize Optimizer
+quarkus:
+  log:
+    level: INFO
+    category:
+      "com.kruize.optimizer":
+        level: DEBUG
+  
+  # Use different port for tests to avoid conflicts
+  http:
+    port: 8082
+    test-port: 8082
+
+# Kruize client configuration for tests (mocked in tests)
+kruize:
+  url: http://kruize:8080
+  
+  # Default configuration values
+  defaults:
+    datasource: prometheus-1
+    metadata-profile: cluster-metadata-local-monitoring
+    metric-profile: resource-optimization-local-monitoring
+  
+  # Bulk scheduler configuration
+  bulk:
+    scheduler:
+      interval: 5m
+      measurement-duration: 15m
+      startup-delay: 1m
+  
+  # Webhook configuration
+  webhook:
+    url: http://kruize-optimizer:8080/webhook
+  
+  # Target labels for bulk operations
+  target:
+    labels:
+      json: '{"kruize/autotune": "enabled"}'
+  
+  # State refresh configuration
+  state:
+    refresh:
+      interval: 30m
+
+# REST client configuration (mocked in tests)
+quarkus.rest-client.kruize-api.url: http://kruize:8080
+
+# Made with Bob
