@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kruize-optimizer
-  namespace: openshift
+  namespace: openshift-tuning
   labels:
     app: kruize-optimizer
 spec:
@@ -80,7 +80,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kruize-optimizer
-  namespace: monitoring
+  namespace: openshift-tuning
 spec:
   type: ClusterIP
   selector:
