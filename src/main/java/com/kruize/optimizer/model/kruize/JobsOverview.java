@@ -16,22 +16,23 @@
 package com.kruize.optimizer.model.kruize;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kruize.optimizer.utils.OptimizerConstants.JobsConstants;
 
 /**
  * Model representing bulk jobs overview statistics
  */
 public class JobsOverview {
 
-    @JsonProperty("jobs_triggered")
+    @JsonProperty(JobsConstants.JOBS_TRIGGERED)
     private int jobsTriggered;
 
-    @JsonProperty("total_experiments")
+    @JsonProperty(JobsConstants.TOTAL_EXPERIMENTS)
     private int totalExperiments;
 
-    @JsonProperty("processed_experiments")
+    @JsonProperty(JobsConstants.PROCESSED_EXPERIMENTS)
     private int processedExperiments;
 
-    @JsonProperty("unique_experiments")
+    @JsonProperty(JobsConstants.UNIQUE_EXPERIMENTS)
     private int uniqueExperiments;
 
     public JobsOverview() {

@@ -16,6 +16,7 @@
 package com.kruize.optimizer.service;
 
 import com.kruize.optimizer.model.kruize.JobsOverview;
+import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 
@@ -38,7 +39,7 @@ public class JobsService {
      */
     public synchronized void incrementJobsTriggered() {
         totalJobsTriggered++;
-        LOG.debugf("Total jobs triggered: %d", totalJobsTriggered);
+        LOG.debugf(MessageConstants.DEBUG_TOTAL_JOBS_TRIGGERED, totalJobsTriggered);
     }
 
     /**
@@ -53,7 +54,7 @@ public class JobsService {
         totalExperimentsProcessed += processed;
         int unique = total - existing;
         totalExperimentsUnique += unique;
-        LOG.debugf("Updated counters - Created: %d, Processed: %d, Unique: %d",
+        LOG.debugf(MessageConstants.DEBUG_UPDATED_COUNTERS,
                    totalExperimentsCreated, totalExperimentsProcessed, totalExperimentsUnique);
     }
 

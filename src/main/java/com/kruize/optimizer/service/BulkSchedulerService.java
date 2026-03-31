@@ -18,6 +18,9 @@ package com.kruize.optimizer.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.WebhookPayload;
+import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
+import com.kruize.optimizer.utils.OptimizerConstants.BulkSchedulerConstants;
+import com.kruize.optimizer.utils.OptimizerConstants.WebhookConstants;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -69,15 +72,15 @@ public class BulkSchedulerService {
      */
     public void initialize() {
         try {
-            LOG.info("Initializing bulk scheduler...");
+            LOG.info(MessageConstants.INFO_INITIALIZING_BULK_SCHEDULER);
             
             // Use common function to refresh state and install missing profiles
             kruizeStateService.refreshStateAndInstallProfiles();
             
             initialized = true;
-            LOG.info("Bulk scheduler initialized successfully");
+            LOG.info(MessageConstants.INFO_BULK_SCHEDULER_INITIALIZED);
         } catch (Exception e) {
-            LOG.error("Failed to initialize bulk scheduler", e);
+            LOG.error(MessageConstants.ERROR_FAILED_TO_INITIALIZE_BULK_SCHEDULER, e);
         }
     }
 
@@ -89,44 +92,44 @@ public class BulkSchedulerService {
     @Scheduled(every = "${kruize.bulk.scheduler.interval:5m}", delayed = "${kruize.bulk.scheduler.startup-delay:1m}")
     public void scheduledBulkApiCall() {
         if (!initialized) {
-            LOG.info("Bulk scheduler not yet initialized. Skipping this run.");
+            LOG.debug(MessageConstants.INFO_BULK_SCHEDULER_NOT_INITIALIZED);
             return;
         }
 
-        LOG.infof("Starting scheduled bulk API call with target labels: %s", targetLabelsJson);
+        LOG.infof(MessageConstants.INFO_STARTING_SCHEDULED_BULK_API_CALL, targetLabelsJson);
 
         try {
             // Parse target labels from JSON
             Map<String, String> targetLabels = parseTargetLabels();
             if (targetLabels.isEmpty()) {
-                LOG.error("No valid target labels found. Cannot proceed with bulk API call.");
+                LOG.error(MessageConstants.ERROR_NO_VALID_TARGET_LABELS);
                 return;
             }
 
             // Check if state cache is empty, refresh if needed
             if (kruizeStateService.isCacheEmpty()) {
-                LOG.info("Kruize state cache is empty, refreshing...");
+                LOG.debug(MessageConstants.INFO_KRUIZE_STATE_CACHE_EMPTY);
                 kruizeStateService.refreshState();
             }
 
             // Get datasource from global state
             Optional<String> datasourceName = kruizeStateService.getDefaultDatasourceName();
             if (!datasourceName.isPresent()) {
-                LOG.error("No datasource available in Kruize. Cannot proceed with bulk API call.");
+                LOG.error(MessageConstants.ERROR_NO_DATASOURCE_AVAILABLE);
                 return;
             }
 
             // Get metadata profile from global state
             Optional<String> metadataProfileName = kruizeStateService.getDefaultMetadataProfileName();
             if (!metadataProfileName.isPresent()) {
-                LOG.error("No metadata profile available in Kruize. Cannot proceed with bulk API call.");
+                LOG.error(MessageConstants.ERROR_NO_METADATA_PROFILE_AVAILABLE);
                 return;
             }
 
             // Get metric profile from global state
             Optional<String> metricProfileName = kruizeStateService.getDefaultMetricProfileName();
             if (!metricProfileName.isPresent()) {
-                LOG.error("No metric profile available in Kruize. Cannot proceed with bulk API call.");
+                LOG.error(MessageConstants.ERROR_NO_METRIC_PROFILE_AVAILABLE);
                 return;
             }
 
@@ -141,20 +144,20 @@ public class BulkSchedulerService {
             // Log the exact JSON payload before calling the bulk API
             try {
                 String jsonPayload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload);
-                LOG.infof("Calling bulk API with payload:\n%s", jsonPayload);
+                LOG.infof(MessageConstants.INFO_CALLING_BULK_API_WITH_PAYLOAD, jsonPayload);
             } catch (Exception e) {
-                LOG.warnf(e, "Failed to serialize payload to JSON for logging");
+                LOG.warnf(e, MessageConstants.WARN_FAILED_TO_SERIALIZE_PAYLOAD);
             }
 
             // Call the bulk API
             String response = kruizeClient.bulkCreateExperiments(payload);
-            LOG.infof("Bulk API call successful. Response: %s", response);
+            LOG.infof(MessageConstants.INFO_BULK_API_CALL_SUCCESSFUL, response);
 
             // Increment job counter in global state
             jobsService.incrementJobsTriggered();
 
         } catch (Exception e) {
-            LOG.errorf(e, "Failed to execute scheduled bulk API call");
+            LOG.errorf(e, MessageConstants.ERROR_FAILED_TO_EXECUTE_SCHEDULED_BULK_API_CALL);
         }
     }
 
@@ -181,7 +184,7 @@ public class BulkSchedulerService {
                 }
             }
         } catch (Exception e) {
-            LOG.errorf(e, "Failed to parse target labels JSON: %s", targetLabelsJson);
+            LOG.errorf(e, MessageConstants.ERROR_FAILED_TO_PARSE_TARGET_LABELS, targetLabelsJson);
         }
         return labels;
     }
@@ -204,28 +207,28 @@ public class BulkSchedulerService {
         Map<String, Object> include = new HashMap<>();
         
         // Add label filter
-        include.put("labels", targetLabels);
+        include.put(BulkSchedulerConstants.LABELS, targetLabels);
 
-        filter.put("include", include);
-        payload.put("filter", filter);
+        filter.put(BulkSchedulerConstants.INCLUDE, include);
+        payload.put(BulkSchedulerConstants.FILTER, filter);
 
         // Add datasource from global state
-        payload.put("datasource", datasource);
+        payload.put(BulkSchedulerConstants.DATASOURCE, datasource);
 
         // Add metadata profile from global state
-        payload.put("metadata_profile", metadataProfile);
+        payload.put(BulkSchedulerConstants.METADATA_PROFILE, metadataProfile);
 
         // Add measurement duration
-        payload.put("measurement_duration", measurementDuration);
+        payload.put(BulkSchedulerConstants.MEASUREMENT_DURATION, measurementDuration);
 
         // Add webhook URL
         if (webhookUrl != null && !webhookUrl.isEmpty()) {
             Map<String, String> webhook = new HashMap<>();
-            webhook.put("url", webhookUrl);
-            payload.put("webhook", webhook);
+            webhook.put(BulkSchedulerConstants.URL, webhookUrl);
+            payload.put(BulkSchedulerConstants.WEBHOOK_KEY, webhook);
         }
 
-        LOG.debugf("Built bulk payload: %s", payload);
+        LOG.debugf(MessageConstants.DEBUG_BUILT_BULK_PAYLOAD, payload);
         return payload;
     }
 
@@ -240,11 +243,11 @@ public class BulkSchedulerService {
                 WebhookPayload.Summary summary = payload.getSummary();
                 String jobId = summary.getJobId();
                 String status = summary.getStatus();
-                LOG.infof("Received webhook for Job %s with status %s", jobId, status);
+                LOG.debugf(MessageConstants.INFO_RECEIVED_WEBHOOK_FOR_JOB, jobId, status);
 
-                if ("COMPLETED".equalsIgnoreCase(status)) {
+                if (WebhookConstants.STATUS_COMPLETED.equalsIgnoreCase(status)) {
                     if (!completedJobs.add(jobId)) {
-                        LOG.infof("Job %s already processed. Skipping.", jobId);
+                        LOG.infof(MessageConstants.INFO_JOB_ALREADY_PROCESSED, jobId);
                         continue;
                     }
 
@@ -255,10 +258,10 @@ public class BulkSchedulerService {
                     // Update experiment counters in global state
                     jobsService.updateExperimentCounters(total, processed, existing);
 
-                    LOG.infof("Job %s completed. Total: %d, Processed: %d, Existing: %d",
+                    LOG.infof(MessageConstants.INFO_JOB_COMPLETED,
                             jobId, total, processed, existing);
                 } else {
-                    LOG.infof("Job %s status is %s", jobId, status);
+                    LOG.infof(MessageConstants.INFO_JOB_STATUS, jobId, status);
                 }
             }
         }

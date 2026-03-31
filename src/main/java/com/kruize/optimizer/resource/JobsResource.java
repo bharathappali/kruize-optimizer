@@ -18,6 +18,8 @@ package com.kruize.optimizer.resource;
 import com.kruize.optimizer.model.api.ApiResponse;
 import com.kruize.optimizer.model.kruize.JobsOverview;
 import com.kruize.optimizer.service.JobsService;
+import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
+import com.kruize.optimizer.utils.OptimizerConstants.OptimizerApiConstants;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -27,7 +29,7 @@ import org.jboss.logging.Logger;
 /**
  * REST resource for bulk jobs operations
  */
-@Path("/jobs")
+@Path(OptimizerApiConstants.JOBS_PATH)
 public class JobsResource {
 
     private static final Logger LOG = Logger.getLogger(JobsResource.class);
@@ -42,23 +44,23 @@ public class JobsResource {
      * @return Response with jobs overview
      */
     @GET
-    @Path("/overview")
+    @Path(OptimizerApiConstants.JOBS_OVERVIEW_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getJobsOverview() {
         try {
-            LOG.info("Fetching jobs overview");
+            LOG.debug(MessageConstants.INFO_FETCHING_JOBS_OVERVIEW);
             
             JobsOverview overview = jobsService.getJobsOverview();
             
             return Response.ok(ApiResponse.success(
-                    "Jobs overview fetched successfully",
+                    MessageConstants.JOBS_OVERVIEW_FETCHED_SUCCESS,
                     overview
             )).build();
             
         } catch (Exception e) {
-            LOG.error("Error fetching jobs overview", e);
+            LOG.error(MessageConstants.ERROR_FETCHING_JOBS_OVERVIEW, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(ApiResponse.error("Error fetching jobs overview"))
+                    .entity(ApiResponse.error(MessageConstants.ERROR_FETCHING_JOBS_OVERVIEW))
                     .build();
         }
     }

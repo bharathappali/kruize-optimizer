@@ -17,6 +17,8 @@ package com.kruize.optimizer.resource;
 
 import com.kruize.optimizer.model.WebhookPayload;
 import com.kruize.optimizer.service.BulkSchedulerService;
+import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
+import com.kruize.optimizer.utils.OptimizerConstants.OptimizerApiConstants;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -31,7 +33,7 @@ import java.util.List;
 /**
  * REST resource for handling webhook callbacks from Kruize bulk API
  */
-@Path("/webhook")
+@Path(OptimizerApiConstants.WEBHOOK_PATH)
 public class WebhookResource {
 
     private static final Logger LOG = Logger.getLogger(WebhookResource.class);
@@ -49,14 +51,14 @@ public class WebhookResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response receiveWebhook(List<WebhookPayload> payload) {
-        LOG.infof("Received webhook with %d payload(s)", payload != null ? payload.size() : 0);
+        LOG.debugf(MessageConstants.INFO_RECEIVED_WEBHOOK, payload != null ? payload.size() : 0);
         
         try {
             bulkSchedulerService.handleWebhook(payload);
             return Response.ok().build();
         } catch (Exception e) {
-            LOG.error("Error processing webhook", e);
-            return Response.serverError().entity("Error processing webhook: " + e.getMessage()).build();
+            LOG.error(MessageConstants.ERROR_PROCESSING_WEBHOOK, e);
+            return Response.serverError().entity(String.format(MessageConstants.ERROR_PROCESSING_WEBHOOK_WITH_MESSAGE, e.getMessage())).build();
         }
     }
 }

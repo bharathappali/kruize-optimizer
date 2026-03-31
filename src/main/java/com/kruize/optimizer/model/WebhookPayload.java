@@ -17,14 +17,16 @@ package com.kruize.optimizer.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kruize.optimizer.utils.OptimizerConstants.WebhookConstants;
+import com.kruize.optimizer.utils.OptimizerConstants.JobsConstants;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WebhookPayload {
 
-    @JsonProperty("summary")
+    @JsonProperty(WebhookConstants.SUMMARY)
     private Summary summary;
 
-    @JsonProperty("webhook")
+    @JsonProperty(WebhookConstants.WEBHOOK)
     private WebhookStatus webhook;
 
     // Getters and Setters
@@ -46,19 +48,19 @@ public class WebhookPayload {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Summary {
-        @JsonProperty("jobID")
+        @JsonProperty(WebhookConstants.JOB_ID)
         private String jobId;
 
-        @JsonProperty("status")
+        @JsonProperty(WebhookConstants.STATUS)
         private String status;
 
-        @JsonProperty("total_experiments")
+        @JsonProperty(JobsConstants.TOTAL_EXPERIMENTS)
         private int totalExperiments;
 
-        @JsonProperty("processed_experiments")
+        @JsonProperty(JobsConstants.PROCESSED_EXPERIMENTS)
         private int processedExperiments;
 
-        @JsonProperty("existing_experiments")
+        @JsonProperty(JobsConstants.EXISTING_EXPERIMENTS)
         private int existingExperiments;
 
         // Getters and Setters
@@ -105,7 +107,7 @@ public class WebhookPayload {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WebhookStatus {
-        @JsonProperty("status")
+        @JsonProperty(WebhookConstants.STATUS)
         private String status;
 
         public String getStatus() {
@@ -117,5 +119,3 @@ public class WebhookPayload {
         }
     }
 }
-
-// Made with Bob
