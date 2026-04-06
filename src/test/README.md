@@ -2,6 +2,10 @@
 
 This directory contains tests for the Kruize Optimizer application.
 
+## Prerequisites
+
+- Java 25 or higher
+
 ## Running Tests
 
 ### Run All Tests

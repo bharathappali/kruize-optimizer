@@ -56,6 +56,7 @@ class MetadataProfileResourceTest {
     KruizeClient kruizeClient;
 
     private List<KruizeProfile> mockMetadataProfilesList;
+    private String emptyMetadataProfilesResponse;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -67,8 +68,22 @@ class MetadataProfileResourceTest {
         
         // Load mock responses from JSON files
         mockMetadataProfilesList = MockResponseLoader.loadMockResponse("metadata_profile_list.json", new TypeReference<List<KruizeProfile>>() {});
+        emptyMetadataProfilesResponse = MockResponseLoader.loadMockResponseAsString("empty_metadata_profile_list.json");
     }
 
+    /**
+     * Test successful retrieval of metadata profiles list
+     *
+     * Test Description: Verifies that the metadata profiles list endpoint returns all available
+     * metadata profiles when Kruize service has profiles configured.
+     *
+     * Expected Output:
+     * - HTTP Status: 200 OK
+     * - Response body contains:
+     *   - status: "success"
+     *   - message: "Profiles fetched successfully"
+     *   - data: Array with 1 metadata profile (cluster-metadata-local-monitoring)
+     */
     @Test
     void testListMetadataProfiles_Success() {
         // Arrange - Mock KruizeClient to return the JSON response
@@ -82,18 +97,35 @@ class MetadataProfileResourceTest {
             .statusCode(200)
             .contentType(ContentType.JSON)
             .body("status", equalTo("success"))
-            .body("message", containsString("successfully"))
+            .body("message", equalTo("Profiles fetched successfully"))
             .body("data", hasSize(1))
             .body("data[0].name", equalTo("cluster-metadata-local-monitoring"));
         
         verify(kruizeClient, times(1)).getMetadataProfiles(true);
     }
 
+    /**
+     * Test metadata profiles list endpoint when no profiles are found
+     *
+     * Test Description: Verifies that when Kruize returns a 400 error indicating no metadata
+     * profiles are found, the optimizer service handles it gracefully and returns an empty
+     * list with a success status.
+     *
+     * Mock Response (from empty_metadata_profile_list.json):
+     * - Kruize returns: {"message": "No metadata profiles found!", "httpcode": 400, "status": "ERROR"}
+     *
+     * Expected Output:
+     * - HTTP Status: 200 OK
+     * - Response body contains:
+     *   - status: "success"
+     *   - message: "No profiles found"
+     *   - data: Empty array []
+     */
     @Test
     void testListMetadataProfiles_EmptyList() {
         // Arrange - Mock KruizeClient to throw 400 exception (Kruize returns error for empty list)
         Response mockResponse = Response.status(400)
-                .entity("{\"message\": \"No metadata profiles found!\", \"httpcode\": 400, \"status\": \"ERROR\"}")
+                .entity(emptyMetadataProfilesResponse)
                 .build();
         ClientWebApplicationException exception = new ClientWebApplicationException(mockResponse);
         when(kruizeClient.getMetadataProfiles(true)).thenThrow(exception);
@@ -106,12 +138,24 @@ class MetadataProfileResourceTest {
             .statusCode(200)
             .contentType(ContentType.JSON)
             .body("status", equalTo("success"))
-            .body("message", containsString("No"))
+            .body("message", equalTo("No profiles found"))
             .body("data", hasSize(0));
         
         verify(kruizeClient, times(1)).getMetadataProfiles(true);
     }
 
+    /**
+     * Test metadata profiles list endpoint when service throws an exception
+     *
+     * Test Description: Verifies that when the Kruize service throws an unexpected exception,
+     * the optimizer service returns a proper error response.
+     *
+     * Expected Output:
+     * - HTTP Status: 500 Internal Server Error
+     * - Response body contains:
+     *   - status: "error"
+     *   - message: Contains "Error fetching"
+     */
     @Test
     void testListMetadataProfiles_ServiceException() {
         // Arrange - Mock KruizeClient to throw exception
@@ -130,6 +174,17 @@ class MetadataProfileResourceTest {
         verify(kruizeClient, times(1)).getMetadataProfiles(true);
     }
 
+    /**
+     * Test metadata profiles list response structure
+     *
+     * Test Description: Verifies that the response from the metadata profiles list endpoint
+     * contains all required fields with proper structure.
+     *
+     * Expected Output:
+     * - HTTP Status: 200 OK
+     * - Response body must contain keys: status, message, data
+     * - All fields must be non-null
+     */
     @Test
     void testListMetadataProfiles_VerifyResponseStructure() {
         // Arrange
