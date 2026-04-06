@@ -4,6 +4,9 @@
 
 A lightweight Quarkus‑based microservice that automates configuration, experiment creation, profile validation, and health orchestration for Kruize Autotune, simplifying the experience for SREs and Platform Engineers.
 
+## Prerequisites
+
+- **Java 25** - Required to build the Docker image and run the application
 
 ## Running the application in dev mode
 
