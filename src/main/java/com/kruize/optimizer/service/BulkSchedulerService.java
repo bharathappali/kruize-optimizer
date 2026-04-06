@@ -58,7 +58,7 @@ public class BulkSchedulerService {
     @ConfigProperty(name = "kruize.webhook.url")
     String webhookUrl;
     
-    @ConfigProperty(name = "kruize.target.labels.json")
+    @ConfigProperty(name = "kruize.target.labels.json", defaultValue = "{\"kruize/autotune\": \"enabled\"}")
     String targetLabelsJson;
 
     @ConfigProperty(name = "kruize.bulk.scheduler.startup-delay", defaultValue = "1m")
