@@ -53,6 +53,32 @@ public class WebhookResource {
     public Response receiveWebhook(List<WebhookPayload> payload) {
         LOG.debugf(MessageConstants.INFO_RECEIVED_WEBHOOK, payload != null ? payload.size() : 0);
         
+        // Validate payload
+        if (payload == null || payload.isEmpty()) {
+            LOG.error(MessageConstants.ERROR_INVALID_WEBHOOK_PAYLOAD_NULL_OR_EMPTY);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(MessageConstants.VALIDATION_ERROR_PAYLOAD_NULL_OR_EMPTY)
+                    .build();
+        }
+        
+        // Validate each payload in the list
+        for (WebhookPayload webhookPayload : payload) {
+            if (webhookPayload == null || webhookPayload.getSummary() == null) {
+                LOG.error(MessageConstants.ERROR_INVALID_WEBHOOK_PAYLOAD_MISSING_SUMMARY);
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(MessageConstants.VALIDATION_ERROR_SUMMARY_REQUIRED)
+                        .build();
+            }
+            
+            WebhookPayload.Summary summary = webhookPayload.getSummary();
+            if (summary.getJobId() == null || summary.getJobId().trim().isEmpty()) {
+                LOG.error(MessageConstants.ERROR_INVALID_WEBHOOK_PAYLOAD_MISSING_JOB_ID);
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(MessageConstants.VALIDATION_ERROR_JOB_ID_REQUIRED)
+                        .build();
+            }
+        }
+        
         try {
             bulkSchedulerService.handleWebhook(payload);
             return Response.ok().build();

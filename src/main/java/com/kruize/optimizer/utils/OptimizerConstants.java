@@ -123,6 +123,12 @@ public final class OptimizerConstants {
         public static final String ERROR_FETCHING_JOBS_OVERVIEW = "Error fetching jobs overview";
         public static final String ERROR_PROCESSING_WEBHOOK = "Error processing webhook";
         public static final String ERROR_PROCESSING_WEBHOOK_WITH_MESSAGE = "Error processing webhook: %s";
+        public static final String ERROR_INVALID_WEBHOOK_PAYLOAD_NULL_OR_EMPTY = "Invalid webhook payload: payload is null or empty";
+        public static final String ERROR_INVALID_WEBHOOK_PAYLOAD_MISSING_SUMMARY = "Invalid webhook payload: missing summary";
+        public static final String ERROR_INVALID_WEBHOOK_PAYLOAD_MISSING_JOB_ID = "Invalid webhook payload: missing or empty jobId";
+        public static final String VALIDATION_ERROR_PAYLOAD_NULL_OR_EMPTY = "Invalid webhook payload: payload cannot be null or empty";
+        public static final String VALIDATION_ERROR_SUMMARY_REQUIRED = "Invalid webhook payload: summary is required";
+        public static final String VALIDATION_ERROR_JOB_ID_REQUIRED = "Invalid webhook payload: jobId is required and cannot be empty";
         public static final String ERROR_FAILED_TO_INITIALIZE_BULK_SCHEDULER = "Failed to initialize bulk scheduler";
         public static final String ERROR_NO_VALID_TARGET_LABELS = "No valid target labels found. Cannot proceed with bulk API call.";
         public static final String ERROR_NO_DATASOURCE_AVAILABLE = "No datasource available in Kruize. Cannot proceed with bulk API call.";
