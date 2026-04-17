@@ -23,5 +23,3 @@ patches:
     target:
       kind: Deployment
       name: kruize-optimizer
-      
-      
