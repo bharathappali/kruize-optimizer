@@ -65,10 +65,6 @@ spec:
               value: '{"kruize/autotune": "enabled"}'
             
             # Default Configuration
-            # Default datasource name
-            - name: KRUIZE_DEFAULT_DATASOURCE
-              value: "prometheus-1"
-            
             # Default metadata profile name
             - name: KRUIZE_DEFAULT_METADATA_PROFILE
               value: "cluster-metadata-local-monitoring"
@@ -91,4 +87,3 @@ spec:
       port: 8080
       targetPort: 8080
 
-# Made with Bob
