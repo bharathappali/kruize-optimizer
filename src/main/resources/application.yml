@@ -1,0 +1,56 @@
+quarkus:
+  application:
+    name: kruize-optimizer-service
+    version: 1.0.0
+  smallrye-openapi:
+    path: /openapi
+  swagger-ui:
+    path: /swagger-ui
+    always-include: ${ENABLE_SWAGGER:false}
+
+  # Enable configuration for a production-ready logging environment
+  log:
+    console:
+      json:
+        enabled: false
+        pretty-print: false
+
+  # REST Client configuration
+  rest-client:
+    "com.kruize.optimizer.client.KruizeClient":
+      url: ${kruize.url}
+
+# --- Kruize Optimizer Configuration ---
+kruize:
+  # URL of the Kruize Autotune service
+  # In k8s: http://<service-name>.<namespace>:<port>
+  url: ${KRUIZE_URL:http://kruize:8080}
+  state:
+    refresh:
+      # Interval to refresh state and install missing profiles
+      interval: ${KRUIZE_STATE_REFRESH_INTERVAL:60m}
+  bulk:
+    scheduler:
+      # Interval to call bulk API (cron format or duration)
+      interval: ${KRUIZE_BULK_SCHEDULER_INTERVAL:15m}
+      # Startup delay before first bulk API call
+      startup-delay: ${KRUIZE_BULK_SCHEDULER_STARTUP_DELAY:1m}
+      # Measurement duration for bulk API calls
+      measurement-duration: ${KRUIZE_BULK_MEASUREMENT_DURATION:15min}
+  webhook:
+    # Webhook URL for bulk API callbacks
+    url: ${KRUIZE_WEBHOOK_URL:http://kruize-optimizer:8080/webhook}
+  target:
+    labels:
+      # Max number of labels to process
+      limit: ${KRUIZE_TARGET_LABEL_LIMIT:1}
+      # Pass labels as a JSON String (Object or Array of "key=value")
+      # Note: Default value must be set via environment variable to avoid YAML parsing issues
+      json: ${KRUIZE_TARGET_LABELS}
+  defaults:
+    # Default datasource name
+    datasource: ${KRUIZE_DEFAULT_DATASOURCE:prometheus-1}
+    # Default metadata profile name
+    metadata-profile: ${KRUIZE_DEFAULT_METADATA_PROFILE:cluster-metadata-local-monitoring}
+    # Default metric profile name
+    metric-profile: ${KRUIZE_DEFAULT_METRIC_PROFILE:resource-optimization-local-monitoring}

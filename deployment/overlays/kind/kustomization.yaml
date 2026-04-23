@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - ../../base
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: kruize-optimizer
+      spec:
+        template:
+          spec:
+            containers:
+              - name: kruize-optimizer
+                env:
+                  - name: KRUIZE_DEFAULT_DATASOURCE
+                    value: "prometheus-1"
+    target:
+      kind: Deployment
+      name: kruize-optimizer
