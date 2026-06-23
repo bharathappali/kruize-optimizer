@@ -287,20 +287,20 @@ public class BulkSchedulerService {
                 }
             }
         }
-    
-        /**
-         * Handle profile update webhook from Kruize
-         *
-         * @param updatedProfile Updated bulk profile
-         */
-        public void handleProfileUpdate(BulkProfile updatedProfile) {
-            LOG.infof("Received profile update for: %s", updatedProfile.getProfileName());
-            
-            if (profileBasedSchedulingEnabled) {
-                profileTimerManager.updateProfileTimer(updatedProfile);
-            } else {
-                LOG.warn("Profile-based scheduling is disabled, ignoring profile update");
-            }
+    }
+
+    /**
+     * Handle profile update webhook from Kruize
+     *
+     * @param updatedProfile Updated bulk profile
+     */
+    public void handleProfileUpdate(BulkProfile updatedProfile) {
+        LOG.infof("Received profile update for: %s", updatedProfile.getProfileName());
+        
+        if (profileBasedSchedulingEnabled) {
+            profileTimerManager.updateProfileTimer(updatedProfile);
+        } else {
+            LOG.warn("Profile-based scheduling is disabled, ignoring profile update");
         }
     }
 }

@@ -124,75 +124,70 @@ public class BulkProfileService {
     /**
      * Convert bulk profile to bulk job request
      *
+     * Expected bulk API format:
+     * {
+     *   "filter": {
+     *     "include": {
+     *       "labels": {"key": "value"}
+     *     }
+     *   },
+     *   "datasource": "datasource-name",
+     *   "metadata_profile": "profile-name",
+     *   "measurement_duration": "15min",
+     *   "webhook": {
+     *     "url": "http://..."
+     *   }
+     * }
+     *
      * @param profile Bulk profile
      * @return Bulk job request as Map
      */
     public Map<String, Object> convertProfileToBulkJob(BulkProfile profile) {
         Map<String, Object> bulkJob = new HashMap<>();
 
-        // Build filter from clusters
-        Map<String, Object> filter = new HashMap<>();
-        Map<String, Object> exclude = new HashMap<>();
+        // Get the first cluster config (assuming single cluster for now)
+        if (profile.getClusters() == null || profile.getClusters().isEmpty()) {
+            throw new IllegalArgumentException("Profile must have at least one cluster configuration");
+        }
         
-        // Initialize exclude fields
-        exclude.put("namespace", new ArrayList<>());
-        exclude.put("workload", new ArrayList<>());
-        exclude.put("containers", new ArrayList<>());
-        exclude.put("labels", new HashMap<>());
+        ClusterConfig cluster = profile.getClusters().get(0);
 
-        // Collect datasources from all clusters
-        List<String> allDatasources = new ArrayList<>();
-        
-        for (ClusterConfig cluster : profile.getClusters()) {
-            // Add datasources
-            if (cluster.getDatasources() != null) {
-                allDatasources.addAll(cluster.getDatasources());
-            }
-
-            // Add labels to filter
-            if (cluster.getLabels() != null && !cluster.getLabels().isEmpty()) {
-                @SuppressWarnings("unchecked")
-                Map<String, String> labels = (Map<String, String>) exclude.get("labels");
-                labels.putAll(cluster.getLabels());
-            }
+        // Build filter with labels
+        if (cluster.getLabels() != null && !cluster.getLabels().isEmpty()) {
+            Map<String, Object> filter = new HashMap<>();
+            Map<String, Object> include = new HashMap<>();
+            include.put("labels", cluster.getLabels());
+            filter.put("include", include);
+            bulkJob.put("filter", filter);
         }
 
-        filter.put("exclude", exclude);
-        bulkJob.put("filter", filter);
+        // Add datasource (use first datasource from cluster)
+        if (cluster.getDatasources() != null && !cluster.getDatasources().isEmpty()) {
+            bulkJob.put("datasource", cluster.getDatasources().get(0));
+        }
 
-        // Add datasources
-        bulkJob.put("datasource", allDatasources);
+        // Add metadata profile from cluster
+        if (cluster.getMetadataProfile() != null && !cluster.getMetadataProfile().isEmpty()) {
+            bulkJob.put("metadata_profile", cluster.getMetadataProfile());
+        }
 
-        // Calculate time range based on measurement duration
+        // Add measurement duration from recommendation settings
         String measurementDuration = profile.getRecommendationSettings().getMeasurementDuration();
-        if (measurementDuration == null || measurementDuration.trim().isEmpty()) {
-            measurementDuration = "15min"; // Default
+        if (measurementDuration != null && !measurementDuration.isEmpty()) {
+            bulkJob.put("measurement_duration", measurementDuration);
         }
-        
-        Map<String, String> timeRange = calculateTimeRange(measurementDuration);
-        bulkJob.put("time_range", timeRange);
 
-        LOG.debugf("Converted profile '%s' to bulk job request", profile.getProfileName());
+        // Add webhook URL if present
+        if (profile.getWebhookUrl() != null && !profile.getWebhookUrl().isEmpty()) {
+            Map<String, String> webhook = new HashMap<>();
+            webhook.put("url", profile.getWebhookUrl());
+            bulkJob.put("webhook", webhook);
+        }
+
+        LOG.debugf("Converted profile '%s' to bulk job request: %s",
+                   profile.getProfileName(), bulkJob);
         
         return bulkJob;
-    }
-
-    /**
-     * Calculate time range based on measurement duration
-     *
-     * @param measurementDuration Measurement duration string (e.g., "15min")
-     * @return Map with start and end timestamps
-     */
-    private Map<String, String> calculateTimeRange(String measurementDuration) {
-        Duration duration = parseScheduling(measurementDuration);
-        Instant end = Instant.now();
-        Instant start = end.minus(duration);
-
-        Map<String, String> timeRange = new HashMap<>();
-        timeRange.put("start", start.toString());
-        timeRange.put("end", end.toString());
-
-        return timeRange;
     }
 }
 

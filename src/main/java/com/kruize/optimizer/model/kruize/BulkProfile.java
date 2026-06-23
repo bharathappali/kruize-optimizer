@@ -17,7 +17,6 @@ package com.kruize.optimizer.model.kruize;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -41,17 +40,17 @@ public class BulkProfile {
     private Boolean enabled;
 
     @JsonProperty("created_at")
-    private Timestamp createdAt;
+    private String createdAt;
 
     @JsonProperty("updated_at")
-    private Timestamp updatedAt;
+    private String updatedAt;
 
     public BulkProfile() {
     }
 
     public BulkProfile(String profileName, List<ClusterConfig> clusters,
                        RecommendationSettings recommendationSettings, String webhookUrl,
-                       Boolean enabled, Timestamp createdAt, Timestamp updatedAt) {
+                       Boolean enabled, String createdAt, String updatedAt) {
         this.profileName = profileName;
         this.clusters = clusters;
         this.recommendationSettings = recommendationSettings;
@@ -101,19 +100,19 @@ public class BulkProfile {
         this.enabled = enabled;
     }
 
-    public Timestamp getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Timestamp getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Timestamp updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
 }
