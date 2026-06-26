@@ -174,6 +174,33 @@ public class BulkConfigService {
             }
         }
 
+        // Add experiment_types from cluster
+        if (cluster.getExperimentTypes() != null && !cluster.getExperimentTypes().isEmpty()) {
+            bulkJob.put("experiment_types", cluster.getExperimentTypes());
+        }
+
+        // Add cluster_name from cluster
+        if (cluster.getClusterName() != null && !cluster.getClusterName().isEmpty()) {
+            bulkJob.put("cluster_name", cluster.getClusterName());
+        }
+
+        // Add model_settings from recommendation settings
+        if (profile.getRecommendationSettings().getModels() != null &&
+                !profile.getRecommendationSettings().getModels().isEmpty()) {
+            Map<String, Object> modelSettings = new HashMap<>();
+            modelSettings.put("models", profile.getRecommendationSettings().getModels());
+            bulkJob.put("model_settings", modelSettings);
+        }
+
+        // Add term_settings from recommendation settings
+        if (profile.getRecommendationSettings().getTerms() != null &&
+                !profile.getRecommendationSettings().getTerms().isEmpty()) {
+            Map<String, Object> termSettings = new HashMap<>();
+            termSettings.put("terms", profile.getRecommendationSettings().getTerms());
+            bulkJob.put("term_settings", termSettings);
+        }
+
+
         // Add webhook URL if present
         if (webhookUrl != null && !webhookUrl.isEmpty()) {
             Map<String, String> webhook = new HashMap<>();
