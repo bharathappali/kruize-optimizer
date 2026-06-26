@@ -21,6 +21,7 @@ import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.kruize.BulkConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -44,6 +45,9 @@ public class BulkConfigService {
 
     @Inject
     ObjectMapper objectMapper;
+
+    @ConfigProperty(name = "kruize.webhook.url")
+    String webhookUrl;
 
     // Regex pattern for parsing scheduling strings like "24h", "15min", "2d"
     private static final Pattern SCHEDULING_PATTERN =
@@ -171,9 +175,9 @@ public class BulkConfigService {
         }
 
         // Add webhook URL if present
-        if (config.getWebhookUrl() != null && !config.getWebhookUrl().isEmpty()) {
+        if (webhookUrl != null && !webhookUrl.isEmpty()) {
             Map<String, String> webhook = new HashMap<>();
-            webhook.put("url", config.getWebhookUrl());
+            webhook.put("url", webhookUrl);
             bulkJob.put("webhook", webhook);
         }
 

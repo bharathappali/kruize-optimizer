@@ -122,5 +122,14 @@ public class JobsService {
     public int getTotalExperimentsUnique() {
         return totalExperimentsUnique;
     }
+
+    /**
+     * Get jobs triggered per profile
+     *
+     * @return Map of profile name to job count
+     */
+    public java.util.Map<String, Integer> getJobsByProfile() {
+        return new java.util.HashMap<>(jobsPerProfile);
+    }
 }
 
