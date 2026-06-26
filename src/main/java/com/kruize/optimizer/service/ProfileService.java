@@ -250,6 +250,9 @@ public class ProfileService {
                 case ProfileType.LAYER:
                     kruizeClient.createLayer(profileDefinition);
                     break;
+                case ProfileType.BULK:
+                    kruizeClient.createBulkProfile(profileDefinition);
+                    break;
                 default:
                     throw new IllegalArgumentException("Unknown profile type: " + profileType);
             }
@@ -303,6 +306,11 @@ public class ProfileService {
             case ProfileType.LAYER:
                 return ProfilePathConstants.LAYERS_DIR + profileName +
                        ProfilePathConstants.JSON_EXTENSION;
+            case ProfileType.BULK:
+                return ProfilePathConstants.CONFIGS_BASE_PATH + profileVersion +
+                        ProfilePathConstants.BULK_PROFILES_DIR + profileName +
+                        ProfilePathConstants.JSON_EXTENSION;
+
             default:
                 throw new IllegalArgumentException("Unknown profile type: " + profileType);
         }
@@ -355,6 +363,16 @@ public class ProfileService {
                             for (JsonNode layerNode : profilesNode) {
                                 String name = layerNode.asText();
                                 profiles.put(name, null); // Layers don't have versions
+                            }
+                        }
+                        break;
+                    case ProfileType.BULK:
+                        profilesNode = rootNode.get(ProfilePathConstants.BULK_PROFILE_KEY);
+                        if (profilesNode != null && profilesNode.isArray()) {
+                            for (JsonNode profileNode : profilesNode) {
+                                String name = profileNode.get("name").asText();
+                                String version = profileNode.get("profile_version").asText();
+                                profiles.put(name, version);
                             }
                         }
                         break;

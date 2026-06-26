@@ -107,6 +107,10 @@ public class KruizeStateService {
             // Install missing layers
             List<String> layerResults = profileService.installMissingProfiles("layer");
             layerResults.forEach(result -> LOG.info("Layer: " + result));
+
+            // Install missing bulk profiles
+            List<String> bulkResults = profileService.installMissingProfiles("bulk_profile");
+            bulkResults.forEach(result -> LOG.info("Bulk profile: " + result));
             
             // Refresh cache after installation
             refreshState();

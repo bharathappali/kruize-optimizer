@@ -16,5 +16,9 @@
     "semeru",
     "hotspot",
     "quarkus"
-  ]
+  ],
+  "bulk_profiles": {
+    "name": "default-bulk-profile",
+    "profile_version": "v1.0"
+  }
 }
