@@ -15,9 +15,11 @@
  *******************************************************************************/
 package com.kruize.optimizer.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.exception.KruizeServiceException;
+import com.kruize.optimizer.model.kruize.BulkProfile;
 import com.kruize.optimizer.model.kruize.KruizeProfile;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.ProfileType;
@@ -178,6 +180,62 @@ public class ProfileService {
                 MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
                 e,
                 Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
+        }
+    }
+
+    /**
+     * Get bulk profiles from Kruize
+     *
+     * @return List of bulk profiles
+     */
+    public List<KruizeProfile> getBulkProfiles() {
+        try {
+            LOG.info("Fetching bulk profiles from Kruize");
+            String response = kruizeClient.getBulkProfiles();
+            List<BulkProfile> bulkProfiles = objectMapper.readValue(
+                    response,
+                    new TypeReference<List<BulkProfile>>() {}
+            );
+            
+            // Convert BulkProfile to KruizeProfile
+            List<KruizeProfile> profiles = bulkProfiles.stream()
+                    .map(bp -> {
+                        KruizeProfile kp = new KruizeProfile();
+                        kp.setName(bp.getProfileName());
+                        kp.setProfileType(ProfileType.BULK);
+                        // Note: BulkProfile doesn't have profile_version field in the response
+                        return kp;
+                    })
+                    .collect(Collectors.toList());
+            
+            return profiles;
+            
+        } catch (ClientWebApplicationException e) {
+            // Check if this is a "No bulk profiles found" error (400 status)
+            if (e.getResponse().getStatus() == 400) {
+                try {
+                    String responseBody = e.getResponse().readEntity(String.class);
+                    if (responseBody != null && responseBody.contains("No bulk profiles found")) {
+                        LOG.info("No bulk profiles found in Kruize, returning empty list");
+                        return Collections.emptyList();
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("Failed to read response body", ex);
+                }
+            }
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                    MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                    e,
+                    Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
+            );
+        } catch (Exception e) {
+            LOG.error(MessageConstants.KRUIZE_SERVICE_UNAVAILABLE, e);
+            throw new KruizeServiceException(
+                    MessageConstants.KRUIZE_SERVICE_UNAVAILABLE,
+                    e,
+                    Response.Status.SERVICE_UNAVAILABLE.getStatusCode()
             );
         }
     }
@@ -401,6 +459,8 @@ public class ProfileService {
                 return getMetricProfiles();
             case ProfileType.LAYER:
                 return getLayers();
+            case ProfileType.BULK:
+                return getBulkProfiles();
             default:
                 throw new IllegalArgumentException("Unknown profile type: " + profileType);
         }

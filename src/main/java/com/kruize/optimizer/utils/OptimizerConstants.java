@@ -243,7 +243,7 @@ public final class OptimizerConstants {
         public static final String CONFIGS_INDEX_FILE = "configs/configsReferenceIndex.json";
         public static final String METADATA_PROFILES_DIR = "/metadata-profiles/";
         public static final String METRIC_PROFILES_DIR = "/metric-profiles/";
-        public static final String BULK_PROFILES_DIR = "/bulk_profiles/";
+        public static final String BULK_PROFILES_DIR = "/bulk-profiles/";
         public static final String LAYERS_DIR = "configs/layers/";
         public static final String JSON_EXTENSION = ".json";
         

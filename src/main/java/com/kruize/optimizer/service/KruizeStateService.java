@@ -17,6 +17,7 @@ package com.kruize.optimizer.service;
 
 import com.kruize.optimizer.model.kruize.Datasource;
 import com.kruize.optimizer.model.kruize.KruizeProfile;
+import com.kruize.optimizer.utils.OptimizerConstants;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -109,7 +110,7 @@ public class KruizeStateService {
             layerResults.forEach(result -> LOG.info("Layer: " + result));
 
             // Install missing bulk profiles
-            List<String> bulkResults = profileService.installMissingProfiles("bulk_profile");
+            List<String> bulkResults = profileService.installMissingProfiles(OptimizerConstants.ProfileType.BULK);
             bulkResults.forEach(result -> LOG.info("Bulk profile: " + result));
             
             // Refresh cache after installation

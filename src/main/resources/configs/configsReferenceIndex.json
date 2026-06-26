@@ -17,8 +17,10 @@
     "hotspot",
     "quarkus"
   ],
-  "bulk_profiles": {
-    "name": "default-bulk-profile",
-    "profile_version": "v1.0"
-  }
+  "bulk_profiles": [
+    {
+      "name": "default-bulk-profile",
+      "profile_version": "v1.0"
+    }
+  ]
 }
