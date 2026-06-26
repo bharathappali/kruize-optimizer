@@ -208,9 +208,22 @@ public class BulkConfigService {
             bulkJob.put("webhook", webhook);
         }
 
+
+        // Log the complete bulk job JSON
+        try {
+            String jsonPayload = objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(bulkJob);
+            LOG.infof("Converted profile '%s' to bulk job:\n%s",
+                    profile.getProfileName(), jsonPayload);
+        } catch (Exception e) {
+            LOG.warnf(e, "Failed to serialize bulk job for profile '%s'",
+                    profile.getProfileName());
+            LOG.debugf("Converted profile '%s' to bulk job request: %s",
+                    profile.getProfileName(), bulkJob);
+        }
+
         LOG.debugf("Converted config '%s' to bulk job request: %s",
                 config.getConfigName(), bulkJob);
-
         return bulkJob;
     }
 }
