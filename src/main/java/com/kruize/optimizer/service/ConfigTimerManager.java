@@ -37,7 +37,7 @@ public class ConfigTimerManager {
     private static final Logger LOG = Logger.getLogger(ConfigTimerManager.class);
 
     @Inject
-    BulkProfileService bulkProfileService;
+    BulkConfigService bulkConfigService;
 
     @Inject
     @RestClient
@@ -64,7 +64,7 @@ public class ConfigTimerManager {
         cancelConfigTimer(configName);
 
         // Parse scheduling interval
-        Duration interval = bulkProfileService.parseScheduling(
+        Duration interval = bulkConfigService.parseScheduling(
                 config.getRecommendationSettings().getScheduling()
         );
 
@@ -107,7 +107,7 @@ public class ConfigTimerManager {
         }
 
         // Calculate new interval
-        Duration newInterval = bulkProfileService.parseScheduling(
+        Duration newInterval = bulkConfigService.parseScheduling(
                 updatedConfig.getRecommendationSettings().getScheduling()
         );
 
@@ -152,7 +152,7 @@ public class ConfigTimerManager {
             LOG.infof("Executing bulk job for config: %s", config.getConfigName());
 
             // Convert config to bulk job
-            Map<String, Object> bulkJob = bulkProfileService.convertConfigToBulkJob(config);
+            Map<String, Object> bulkJob = bulkConfigService.convertConfigToBulkJob(config);
 
             // Call bulk API
             String response = kruizeClient.bulkCreateExperiments(bulkJob);
@@ -176,7 +176,7 @@ public class ConfigTimerManager {
         try {
             LOG.info("Initializing config timers...");
 
-            List<BulkConfig> configs = bulkProfileService.getEnabledConfigs();
+            List<BulkConfig> configs = bulkConfigService.getEnabledConfigs();
 
             LOG.infof("Found %d enabled configs", configs.size());
 

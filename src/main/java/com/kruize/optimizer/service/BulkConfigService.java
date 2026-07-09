@@ -174,32 +174,33 @@ public class BulkConfigService {
             }
         }
 
-        // Add experiment_types from cluster
-        if (cluster.getExperimentTypes() != null && !cluster.getExperimentTypes().isEmpty()) {
-            bulkJob.put("experiment_types", cluster.getExperimentTypes());
+        // Add experiment_types from config
+        if (config.getExperimentTypes() != null && !config.getExperimentTypes().isEmpty()) {
+            bulkJob.put("experiment_types", config.getExperimentTypes());
         }
 
-        // Add cluster_name from cluster
-        if (cluster.getClusterName() != null && !cluster.getClusterName().isEmpty()) {
-            bulkJob.put("cluster_name", cluster.getClusterName());
+        // Add cluster_name from config
+        if (config.getClusterName() != null && !config.getClusterName().isEmpty()) {
+            bulkJob.put("cluster_name", config.getClusterName());
         }
 
         // Add model_settings from recommendation settings
-        if (profile.getRecommendationSettings().getModels() != null &&
-                !profile.getRecommendationSettings().getModels().isEmpty()) {
+        if (config.getRecommendationSettings() != null &&
+                config.getRecommendationSettings().getModels() != null &&
+                !config.getRecommendationSettings().getModels().isEmpty()) {
             Map<String, Object> modelSettings = new HashMap<>();
-            modelSettings.put("models", profile.getRecommendationSettings().getModels());
+            modelSettings.put("models", config.getRecommendationSettings().getModels());
             bulkJob.put("model_settings", modelSettings);
         }
 
         // Add term_settings from recommendation settings
-        if (profile.getRecommendationSettings().getTerms() != null &&
-                !profile.getRecommendationSettings().getTerms().isEmpty()) {
+        if (config.getRecommendationSettings() != null &&
+                config.getRecommendationSettings().getTerms() != null &&
+                !config.getRecommendationSettings().getTerms().isEmpty()) {
             Map<String, Object> termSettings = new HashMap<>();
-            termSettings.put("terms", profile.getRecommendationSettings().getTerms());
+            termSettings.put("terms", config.getRecommendationSettings().getTerms());
             bulkJob.put("term_settings", termSettings);
         }
-
 
         // Add webhook URL if present
         if (webhookUrl != null && !webhookUrl.isEmpty()) {
@@ -208,18 +209,15 @@ public class BulkConfigService {
             bulkJob.put("webhook", webhook);
         }
 
-
         // Log the complete bulk job JSON
         try {
             String jsonPayload = objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValueAsString(bulkJob);
-            LOG.infof("Converted profile '%s' to bulk job:\n%s",
-                    profile.getProfileName(), jsonPayload);
+            LOG.infof("Converted config '%s' to bulk job:\n%s",
+                    config.getConfigName(), jsonPayload);
         } catch (Exception e) {
-            LOG.warnf(e, "Failed to serialize bulk job for profile '%s'",
-                    profile.getProfileName());
-            LOG.debugf("Converted profile '%s' to bulk job request: %s",
-                    profile.getProfileName(), bulkJob);
+            LOG.warnf(e, "Failed to serialize bulk job for config '%s'",
+                    config.getConfigName());
         }
 
         LOG.debugf("Converted config '%s' to bulk job request: %s",
