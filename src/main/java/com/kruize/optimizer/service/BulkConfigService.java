@@ -18,8 +18,7 @@ package com.kruize.optimizer.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
-import com.kruize.optimizer.model.kruize.BulkProfile;
-import com.kruize.optimizer.model.kruize.ClusterConfig;
+import com.kruize.optimizer.model.kruize.BulkConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -32,12 +31,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Service for managing bulk profiles and converting them to bulk job requests
+ * Service for managing bulk configs and converting them to bulk job requests
  */
 @ApplicationScoped
-public class BulkProfileService {
+public class BulkConfigService {
 
-    private static final Logger LOG = Logger.getLogger(BulkProfileService.class);
+    private static final Logger LOG = Logger.getLogger(BulkConfigService.class);
 
     @Inject
     @RestClient
@@ -51,29 +50,29 @@ public class BulkProfileService {
             Pattern.compile("(\\d+)\\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|d|day|days)");
 
     /**
-     * Fetch all enabled profiles from Kruize
+     * Fetch all enabled configs from Kruize
      *
-     * @return List of enabled bulk profiles
+     * @return List of enabled bulk configs
      */
-    public List<BulkProfile> getEnabledProfiles() {
+    public List<BulkConfig> getEnabledConfigs() {
         try {
-            String response = kruizeClient.getBulkProfiles();
-            List<BulkProfile> allProfiles = objectMapper.readValue(
+            String response = kruizeClient.getBulkConfigs();
+            List<BulkConfig> allConfigs = objectMapper.readValue(
                     response,
-                    new TypeReference<List<BulkProfile>>() {}
+                    new TypeReference<List<BulkConfig>>() {}
             );
 
-            List<BulkProfile> enabledProfiles = allProfiles.stream()
-                    .filter(p -> p.getEnabled() != null && p.getEnabled())
+            List<BulkConfig> enabledConfigs = allConfigs.stream()
+                    .filter(c -> c.getEnabled() != null && c.getEnabled())
                     .collect(Collectors.toList());
 
-            LOG.infof("Fetched %d enabled profiles out of %d total profiles",
-                    enabledProfiles.size(), allProfiles.size());
+            LOG.infof("Fetched %d enabled configs out of %d total configs",
+                    enabledConfigs.size(), allConfigs.size());
 
-            return enabledProfiles;
+            return enabledConfigs;
 
         } catch (Exception e) {
-            LOG.error("Failed to fetch bulk profiles from Kruize", e);
+            LOG.error("Failed to fetch bulk configs from Kruize", e);
             return Collections.emptyList();
         }
     }
@@ -121,7 +120,7 @@ public class BulkProfileService {
     }
 
     /**
-     * Convert bulk profile to bulk job request
+     * Convert bulk config to bulk job request
      *
      * Expected bulk API format:
      * {
@@ -138,53 +137,48 @@ public class BulkProfileService {
      *   }
      * }
      *
-     * @param profile Bulk profile
+     * @param config Bulk config
      * @return Bulk job request as Map
      */
-    public Map<String, Object> convertProfileToBulkJob(BulkProfile profile) {
+    public Map<String, Object> convertConfigToBulkJob(BulkConfig config) {
         Map<String, Object> bulkJob = new HashMap<>();
 
-        // Get the first cluster config (assuming single cluster for now)
-        if (profile.getClusters() == null || profile.getClusters().isEmpty()) {
-            throw new IllegalArgumentException("Profile must have at least one cluster configuration");
-        }
-
-        ClusterConfig cluster = profile.getClusters().get(0);
-
         // Build filter with labels
-        if (cluster.getLabels() != null && !cluster.getLabels().isEmpty()) {
+        if (config.getLabels() != null && !config.getLabels().isEmpty()) {
             Map<String, Object> filter = new HashMap<>();
             Map<String, Object> include = new HashMap<>();
-            include.put("labels", cluster.getLabels());
+            include.put("labels", config.getLabels());
             filter.put("include", include);
             bulkJob.put("filter", filter);
         }
 
-        // Add datasource (use first datasource from cluster)
-        if (cluster.getDatasources() != null && !cluster.getDatasources().isEmpty()) {
-            bulkJob.put("datasource", cluster.getDatasources().get(0));
+        // Add datasource (use first datasource)
+        if (config.getDatasources() != null && !config.getDatasources().isEmpty()) {
+            bulkJob.put("datasource", config.getDatasources().get(0));
         }
 
-        // Add metadata profile from cluster
-        if (cluster.getMetadataProfile() != null && !cluster.getMetadataProfile().isEmpty()) {
-            bulkJob.put("metadata_profile", cluster.getMetadataProfile());
+        // Add metadata profile
+        if (config.getMetadataProfile() != null && !config.getMetadataProfile().isEmpty()) {
+            bulkJob.put("metadata_profile", config.getMetadataProfile());
         }
 
-        // Add measurement duration from recommendation settings
-        String measurementDuration = profile.getRecommendationSettings().getMeasurementDuration();
-        if (measurementDuration != null && !measurementDuration.isEmpty()) {
-            bulkJob.put("measurement_duration", measurementDuration);
+        // Add measurement duration from trial settings
+        if (config.getTrialSettings() != null) {
+            String measurementDuration = config.getTrialSettings().getMeasurementDuration();
+            if (measurementDuration != null && !measurementDuration.isEmpty()) {
+                bulkJob.put("measurement_duration", measurementDuration);
+            }
         }
 
         // Add webhook URL if present
-        if (profile.getWebhookUrl() != null && !profile.getWebhookUrl().isEmpty()) {
+        if (config.getWebhookUrl() != null && !config.getWebhookUrl().isEmpty()) {
             Map<String, String> webhook = new HashMap<>();
-            webhook.put("url", profile.getWebhookUrl());
+            webhook.put("url", config.getWebhookUrl());
             bulkJob.put("webhook", webhook);
         }
 
-        LOG.debugf("Converted profile '%s' to bulk job request: %s",
-                profile.getProfileName(), bulkJob);
+        LOG.debugf("Converted config '%s' to bulk job request: %s",
+                config.getConfigName(), bulkJob);
 
         return bulkJob;
     }
