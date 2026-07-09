@@ -129,7 +129,7 @@ public class JobsService {
      * @return Map of profile name to job count
      */
     public java.util.Map<String, Integer> getJobsByProfile() {
-        return new java.util.HashMap<>(jobsPerProfile);
+        return new java.util.HashMap<>(jobsPerConfig);
     }
 }
 
