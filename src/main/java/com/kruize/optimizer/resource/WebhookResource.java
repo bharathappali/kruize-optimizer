@@ -16,7 +16,7 @@
 package com.kruize.optimizer.resource;
 
 import com.kruize.optimizer.model.WebhookPayload;
-import com.kruize.optimizer.model.kruize.BulkProfile;
+import com.kruize.optimizer.model.kruize.BulkConfig;
 import com.kruize.optimizer.service.BulkSchedulerService;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.OptimizerApiConstants;
@@ -90,34 +90,34 @@ public class WebhookResource {
     }
 
     /**
-     * Receive profile update webhook from Kruize
+     * Receive config update webhook from Kruize
      *
-     * @param profile Updated bulk profile
+     * @param config Updated bulk config
      * @return HTTP response
      */
     @POST
-    @Path("/profile-update")
+    @Path("/config-update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response receiveProfileUpdate(BulkProfile profile) {
-        LOG.infof("Received profile update webhook for: %s",
-                profile != null ? profile.getProfileName() : "null");
+    public Response receiveConfigUpdate(BulkConfig config) {
+        LOG.infof("Received config update webhook for: %s",
+                config != null ? config.getConfigName() : "null");
 
-        // Validate profile
-        if (profile == null || profile.getProfileName() == null || profile.getProfileName().trim().isEmpty()) {
-            LOG.error("Invalid profile update: profile or profile name is null/empty");
+        // Validate config
+        if (config == null || config.getConfigName() == null || config.getConfigName().trim().isEmpty()) {
+            LOG.error("Invalid config update: config or config name is null/empty");
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid profile update: profile name is required")
+                    .entity("Invalid config update: config name is required")
                     .build();
         }
 
         try {
-            bulkSchedulerService.handleProfileUpdate(profile);
+            bulkSchedulerService.handleConfigUpdate(config);
             return Response.ok().build();
         } catch (Exception e) {
-            LOG.error("Error processing profile update webhook", e);
+            LOG.error("Error processing config update webhook", e);
             return Response.serverError()
-                    .entity("Error processing profile update: " + e.getMessage())
+                    .entity("Error processing config update: " + e.getMessage())
                     .build();
         }
     }

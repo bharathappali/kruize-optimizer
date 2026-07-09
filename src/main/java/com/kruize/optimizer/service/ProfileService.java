@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.exception.KruizeServiceException;
-import com.kruize.optimizer.model.kruize.BulkProfile;
+import com.kruize.optimizer.model.kruize.BulkConfig;
 import com.kruize.optimizer.model.kruize.KruizeProfile;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.ProfileType;
@@ -185,26 +185,26 @@ public class ProfileService {
     }
 
     /**
-     * Get bulk profiles from Kruize
+     * Get bulk configs from Kruize
      *
-     * @return List of bulk profiles
+     * @return List of bulk configs
      */
-    public List<KruizeProfile> getBulkProfiles() {
+    public List<KruizeProfile> getBulkConfigs() {
         try {
-            LOG.info("Fetching bulk profiles from Kruize");
-            String response = kruizeClient.getBulkProfiles();
-            List<BulkProfile> bulkProfiles = objectMapper.readValue(
+            LOG.info("Fetching bulk configs from Kruize");
+            String response = kruizeClient.getBulkConfigs();
+            List<BulkConfig> bulkConfigs = objectMapper.readValue(
                     response,
-                    new TypeReference<List<BulkProfile>>() {}
+                    new TypeReference<List<BulkConfig>>() {}
             );
             
-            // Convert BulkProfile to KruizeProfile
-            List<KruizeProfile> profiles = bulkProfiles.stream()
-                    .map(bp -> {
+            // Convert BulkConfig to KruizeProfile
+            List<KruizeProfile> profiles = bulkConfigs.stream()
+                    .map(bc -> {
                         KruizeProfile kp = new KruizeProfile();
-                        kp.setName(bp.getProfileName());
+                        kp.setName(bc.getConfigName());
                         kp.setProfileType(ProfileType.BULK);
-                        // Note: BulkProfile doesn't have profile_version field in the response
+                        // Note: BulkConfig doesn't have profile_version field in the response
                         return kp;
                     })
                     .collect(Collectors.toList());
@@ -212,12 +212,12 @@ public class ProfileService {
             return profiles;
             
         } catch (ClientWebApplicationException e) {
-            // Check if this is a "No bulk profiles found" error (400 status)
+            // Check if this is a "No bulk configs found" error (400 status)
             if (e.getResponse().getStatus() == 400) {
                 try {
                     String responseBody = e.getResponse().readEntity(String.class);
-                    if (responseBody != null && responseBody.contains("No bulk profiles found")) {
-                        LOG.info("No bulk profiles found in Kruize, returning empty list");
+                    if (responseBody != null && responseBody.contains("No bulk configs found")) {
+                        LOG.info("No bulk configs found in Kruize, returning empty list");
                         return Collections.emptyList();
                     }
                 } catch (Exception ex) {
@@ -309,7 +309,7 @@ public class ProfileService {
                     kruizeClient.createLayer(profileDefinition);
                     break;
                 case ProfileType.BULK:
-                    kruizeClient.createBulkProfile(profileDefinition);
+                    kruizeClient.createBulkConfig(profileDefinition);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown profile type: " + profileType);
@@ -366,7 +366,7 @@ public class ProfileService {
                        ProfilePathConstants.JSON_EXTENSION;
             case ProfileType.BULK:
                 return ProfilePathConstants.CONFIGS_BASE_PATH + profileVersion +
-                        ProfilePathConstants.BULK_PROFILES_DIR + profileName +
+                        ProfilePathConstants.BULK_CONFIGS_DIR + profileName +
                         ProfilePathConstants.JSON_EXTENSION;
 
             default:
@@ -425,7 +425,7 @@ public class ProfileService {
                         }
                         break;
                     case ProfileType.BULK:
-                        profilesNode = rootNode.get(ProfilePathConstants.BULK_PROFILE_KEY);
+                        profilesNode = rootNode.get(ProfilePathConstants.BULK_CONFIGS_KEY);
                         if (profilesNode != null && profilesNode.isArray()) {
                             for (JsonNode profileNode : profilesNode) {
                                 String name = profileNode.get("name").asText();
@@ -460,7 +460,7 @@ public class ProfileService {
             case ProfileType.LAYER:
                 return getLayers();
             case ProfileType.BULK:
-                return getBulkProfiles();
+                return getBulkConfigs();
             default:
                 throw new IllegalArgumentException("Unknown profile type: " + profileType);
         }

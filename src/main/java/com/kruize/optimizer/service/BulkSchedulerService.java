@@ -18,7 +18,7 @@ package com.kruize.optimizer.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.WebhookPayload;
-import com.kruize.optimizer.model.kruize.BulkProfile;
+import com.kruize.optimizer.model.kruize.BulkConfig;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.BulkSchedulerConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.WebhookConstants;
@@ -54,10 +54,10 @@ public class BulkSchedulerService {
     ObjectMapper objectMapper;
 
     @Inject
-    ProfileTimerManager profileTimerManager;
+    ConfigTimerManager configTimerManager;
 
-    @ConfigProperty(name = "kruize.bulk.profile.enabled", defaultValue = "true")
-    boolean profileBasedSchedulingEnabled;
+    @ConfigProperty(name = "kruize.bulk.config.enabled", defaultValue = "true")
+    boolean configBasedSchedulingEnabled;
 
     @ConfigProperty(name = "kruize.bulk.scheduler.measurement-duration")
     String measurementDuration;
@@ -84,12 +84,12 @@ public class BulkSchedulerService {
             // Use common function to refresh state and install missing profiles
             kruizeStateService.refreshStateAndInstallProfiles();
 
-            if (profileBasedSchedulingEnabled) {
-                // NEW: Initialize profile-based timers
-                LOG.info("Profile-based scheduling is enabled, initializing profile timers...");
-                profileTimerManager.initializeProfiles();
+            if (configBasedSchedulingEnabled) {
+                // NEW: Initialize config-based timers
+                LOG.info("Config-based scheduling is enabled, initializing config timers...");
+                configTimerManager.initializeConfigs();
             } else {
-                LOG.info("Profile-based scheduling is disabled, using legacy fixed-schedule mode");
+                LOG.info("Config-based scheduling is disabled, using legacy fixed-schedule mode");
             }
             
             initialized = true;
@@ -111,9 +111,9 @@ public class BulkSchedulerService {
             return;
         }
 
-        if (profileBasedSchedulingEnabled) {
-            // Skip if profile-based scheduling is enabled
-            // Profiles are managed by ProfileTimerManager
+        if (configBasedSchedulingEnabled) {
+            // Skip if config-based scheduling is enabled
+            // Configs are managed by ConfigTimerManager
             return;
         }
 
@@ -289,17 +289,17 @@ public class BulkSchedulerService {
     }
 
     /**
-     * Handle profile update webhook from Kruize
+     * Handle config update webhook from Kruize
      *
-     * @param updatedProfile Updated bulk profile
+     * @param updatedConfig Updated bulk config
      */
-    public void handleProfileUpdate(BulkProfile updatedProfile) {
-        LOG.infof("Received profile update for: %s", updatedProfile.getProfileName());
+    public void handleConfigUpdate(BulkConfig updatedConfig) {
+        LOG.infof("Received config update for: %s", updatedConfig.getConfigName());
 
-        if (profileBasedSchedulingEnabled) {
-            profileTimerManager.updateProfileTimer(updatedProfile);
+        if (configBasedSchedulingEnabled) {
+            configTimerManager.updateConfigTimer(updatedConfig);
         } else {
-            LOG.warn("Profile-based scheduling is disabled, ignoring profile update");
+            LOG.warn("Config-based scheduling is disabled, ignoring config update");
         }
     }
 }
