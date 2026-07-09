@@ -4,7 +4,7 @@
   "datasources": ["thanos-1"],
   "namespaces": [],
   "labels": {
-    "label_ibm_runtimes_intelligence_monitoring": "true"
+    "ibm.runtimes.intelligence.monitoring": "true"
   },
   "experiment_types": ["container"],
   "metadata_profile": "cluster-metadata-local-monitoring",
