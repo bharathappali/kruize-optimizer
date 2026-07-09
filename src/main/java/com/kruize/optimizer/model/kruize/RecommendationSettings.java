@@ -33,17 +33,13 @@ public class RecommendationSettings {
     @JsonProperty("models")
     private List<String> models;
 
-    @JsonProperty("measurement_duration")
-    private String measurementDuration;
-
     public RecommendationSettings() {
     }
 
-    public RecommendationSettings(String scheduling, List<String> terms, List<String> models, String measurementDuration) {
+    public RecommendationSettings(String scheduling, List<String> terms, List<String> models) {
         this.scheduling = scheduling;
         this.terms = terms;
         this.models = models;
-        this.measurementDuration = measurementDuration;
     }
 
     public String getScheduling() {
@@ -68,13 +64,5 @@ public class RecommendationSettings {
 
     public void setModels(List<String> models) {
         this.models = models;
-    }
-
-    public String getMeasurementDuration() {
-        return measurementDuration;
-    }
-
-    public void setMeasurementDuration(String measurementDuration) {
-        this.measurementDuration = measurementDuration;
     }
 }
