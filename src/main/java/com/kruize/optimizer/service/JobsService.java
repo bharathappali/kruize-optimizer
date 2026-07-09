@@ -34,8 +34,8 @@ public class JobsService {
     private int totalExperimentsProcessed = 0;
     private int totalExperimentsUnique = 0;
 
-    // Track jobs per profile
-    private final java.util.Map<String, Integer> jobsPerProfile = new java.util.concurrent.ConcurrentHashMap<>();
+    // Track jobs per config
+    private final java.util.Map<String, Integer> jobsPerConfig = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * Increment the total jobs triggered counter
@@ -46,15 +46,15 @@ public class JobsService {
     }
 
     /**
-     * Increment the total jobs triggered counter for a specific profile
+     * Increment the total jobs triggered counter for a specific config
      *
-     * @param profileName Profile name
+     * @param configName Config name
      */
-    public synchronized void incrementJobsTriggered(String profileName) {
+    public synchronized void incrementJobsTriggered(String configName) {
         totalJobsTriggered++;
-        jobsPerProfile.merge(profileName, 1, Integer::sum);
-        LOG.debugf("Total jobs triggered: %d (Profile '%s': %d)",
-                totalJobsTriggered, profileName, jobsPerProfile.get(profileName));
+        jobsPerConfig.merge(configName, 1, Integer::sum);
+        LOG.debugf("Total jobs triggered: %d (Config '%s': %d)",
+                totalJobsTriggered, configName, jobsPerConfig.get(configName));
     }
 
     /**
