@@ -314,6 +314,13 @@ public class ProfileService {
                 default:
                     throw new IllegalArgumentException("Unknown profile type: " + profileType);
             }
+        } catch (ClientWebApplicationException e) {
+            // Handle 409 Conflict - profile already exists
+            if (e.getResponse().getStatus() == 409) {
+                LOG.debugf("Profile %s already exists (409 Conflict), skipping installation", profileName);
+                return; // Treat as success - profile already exists
+            }
+            throw new RuntimeException("Failed to install profile: " + profileName, e);
         } catch (Exception e) {
             throw new RuntimeException("Failed to install profile: " + profileName, e);
         }
