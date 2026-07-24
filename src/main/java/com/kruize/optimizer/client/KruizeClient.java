@@ -89,7 +89,7 @@ public interface KruizeClient {
     @GET
     @Path(OptimizerConstants.KruizeClientConstants.BULK_CONFIGS_ENDPOINT)
     @Produces(MediaType.APPLICATION_JSON)
-    String getBulkConfig(@QueryParam(OptimizerConstants.KruizeClientConstants.CONFIG_NAME) String configName);
+    String getBulkConfigByName(@QueryParam(OptimizerConstants.KruizeClientConstants.CONFIG_NAME) String configName);
 
     @POST
     @Path(OptimizerConstants.KruizeClientConstants.BULK_CONFIGS_ENDPOINT)
