@@ -51,6 +51,10 @@ public final class OptimizerConstants {
         // bulk APIs
         public static final String BULK_ENDPOINT = "/bulk";
         public static final String JOB_ID = "job_id";
+
+        // bulk config APIs
+        public static final String BULK_CONFIGS_ENDPOINT = "/bulkConfigs";
+        public static final String CONFIG_NAME = "config_name";
     }
 
     // contains constants for Optimizer Service API endpoints
