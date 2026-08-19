@@ -56,7 +56,7 @@ public class BulkConfigService {
      */
     public List<BulkConfig> getEnabledConfigs() {
         try {
-            String response = kruizeClient.getBulkConfigs();
+            String response = kruizeClient.getBulkConfigs(null);
             List<BulkConfig> allConfigs = objectMapper.readValue(
                     response,
                     new TypeReference<List<BulkConfig>>() {}
@@ -120,18 +120,25 @@ public class BulkConfigService {
     }
 
     /**
-     * Convert bulk config to bulk job request
+     * Convert bulk config to bulk job request.
      *
      * Expected bulk API format:
      * {
      *   "filter": {
      *     "include": {
-     *       "labels": {"key": "value"}
+     *       "namespaces": ["ns1"],
+     *       "labels":     {"key": "value"}
      *     }
      *   },
-     *   "datasource": "datasource-name",
-     *   "metadata_profile": "profile-name",
+     *   "cluster_name":       "cluster-name",
+     *   "datasource":         "datasource-name",
+     *   "metadata_profile":   "profile-name",
      *   "measurement_duration": "15min",
+     *   "recommendation_settings": {
+     *     "scheduling": "24h",
+     *     "terms":  ["short_term"],
+     *     "models": ["cost"]
+     *   },
      *   "webhook": {
      *     "url": "http://..."
      *   }
@@ -143,17 +150,34 @@ public class BulkConfigService {
     public Map<String, Object> convertConfigToBulkJob(BulkConfig config) {
         Map<String, Object> bulkJob = new HashMap<>();
 
-        // Build filter with labels
-        if (config.getLabels() != null && !config.getLabels().isEmpty()) {
-            Map<String, Object> filter = new HashMap<>();
+        // Build filter with namespaces and labels
+        boolean hasNamespaces = config.getNamespaces() != null && !config.getNamespaces().isEmpty();
+        boolean hasLabels = config.getLabels() != null && !config.getLabels().isEmpty();
+        if (hasNamespaces || hasLabels) {
             Map<String, Object> include = new HashMap<>();
-            include.put("labels", config.getLabels());
+            if (hasNamespaces) {
+                include.put("namespaces", config.getNamespaces());
+            }
+            if (hasLabels) {
+                include.put("labels", config.getLabels());
+            }
+            Map<String, Object> filter = new HashMap<>();
             filter.put("include", include);
             bulkJob.put("filter", filter);
         }
 
-        // Add datasource (use first datasource)
+        // Add cluster name
+        if (config.getClusterName() != null && !config.getClusterName().isEmpty()) {
+            bulkJob.put("cluster_name", config.getClusterName());
+        }
+
+        // Only the first datasource is used. Kruize bulk API accepts a single datasource
+        // per job; multi-datasource configs require one job submission per datasource.
         if (config.getDatasources() != null && !config.getDatasources().isEmpty()) {
+            if (config.getDatasources().size() > 1) {
+                LOG.warnf("Config '%s' defines %d datasources; only the first ('%s') will be used for the bulk job",
+                        config.getConfigName(), config.getDatasources().size(), config.getDatasources().get(0));
+            }
             bulkJob.put("datasource", config.getDatasources().get(0));
         }
 
@@ -167,6 +191,26 @@ public class BulkConfigService {
             String measurementDuration = config.getTrialSettings().getMeasurementDuration();
             if (measurementDuration != null && !measurementDuration.isEmpty()) {
                 bulkJob.put("measurement_duration", measurementDuration);
+            }
+        }
+
+        // Add recommendation settings (scheduling, terms, models)
+        if (config.getRecommendationSettings() != null) {
+            Map<String, Object> recSettings = new HashMap<>();
+            String scheduling = config.getRecommendationSettings().getScheduling();
+            if (scheduling != null && !scheduling.isEmpty()) {
+                recSettings.put("scheduling", scheduling);
+            }
+            if (config.getRecommendationSettings().getTerms() != null
+                    && !config.getRecommendationSettings().getTerms().isEmpty()) {
+                recSettings.put("terms", config.getRecommendationSettings().getTerms());
+            }
+            if (config.getRecommendationSettings().getModels() != null
+                    && !config.getRecommendationSettings().getModels().isEmpty()) {
+                recSettings.put("models", config.getRecommendationSettings().getModels());
+            }
+            if (!recSettings.isEmpty()) {
+                bulkJob.put("recommendation_settings", recSettings);
             }
         }
 

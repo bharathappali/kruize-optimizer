@@ -16,6 +16,7 @@
 package com.kruize.optimizer.client;
 
 import com.kruize.optimizer.model.api.DatasourceListResponse;
+import com.kruize.optimizer.model.kruize.BulkConfig;
 import com.kruize.optimizer.model.kruize.KruizeProfile;
 import com.kruize.optimizer.utils.OptimizerConstants;
 import jakarta.ws.rs.*;
@@ -84,16 +85,11 @@ public interface KruizeClient {
     @GET
     @Path(OptimizerConstants.KruizeClientConstants.BULK_CONFIGS_ENDPOINT)
     @Produces(MediaType.APPLICATION_JSON)
-    String getBulkConfigs();
-
-    @GET
-    @Path(OptimizerConstants.KruizeClientConstants.BULK_CONFIGS_ENDPOINT)
-    @Produces(MediaType.APPLICATION_JSON)
-    String getBulkConfigByName(@QueryParam(OptimizerConstants.KruizeClientConstants.CONFIG_NAME) String configName);
+    String getBulkConfigs(@QueryParam(OptimizerConstants.KruizeClientConstants.CONFIG_NAME) String configName);
 
     @POST
     @Path(OptimizerConstants.KruizeClientConstants.BULK_CONFIGS_ENDPOINT)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void createBulkConfig(Object configDefinition);
+    void createBulkConfig(BulkConfig configDefinition);
 }
