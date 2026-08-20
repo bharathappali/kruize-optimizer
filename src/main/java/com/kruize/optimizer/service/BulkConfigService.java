@@ -15,17 +15,21 @@
  *******************************************************************************/
 package com.kruize.optimizer.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.kruize.BulkConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,31 +54,41 @@ public class BulkConfigService {
             Pattern.compile("(\\d+)\\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|d|day|days)");
 
     /**
-     * Fetch all enabled configs from Kruize
+     * Fetch all enabled configs from Kruize.
      *
      * @return List of enabled bulk configs
+     * @throws WebApplicationException  if the Kruize HTTP call fails (4xx / 5xx / network)
+     * @throws IllegalStateException    if the response body cannot be parsed as a list of BulkConfig
      */
     public List<BulkConfig> getEnabledConfigs() {
+        String response;
         try {
-            String response = kruizeClient.getBulkConfigs(null);
-            List<BulkConfig> allConfigs = objectMapper.readValue(
+            response = kruizeClient.getBulkConfigs(null);
+        } catch (WebApplicationException e) {
+            LOG.errorf(e, "Kruize returned an error response while fetching bulk configs: HTTP %d",
+                    e.getResponse().getStatus());
+            throw e;
+        }
+
+        List<BulkConfig> allConfigs;
+        try {
+            allConfigs = objectMapper.readValue(
                     response,
                     new TypeReference<List<BulkConfig>>() {}
             );
-
-            List<BulkConfig> enabledConfigs = allConfigs.stream()
-                    .filter(c -> c.getEnabled() != null && c.getEnabled())
-                    .collect(Collectors.toList());
-
-            LOG.infof("Fetched %d enabled configs out of %d total configs",
-                    enabledConfigs.size(), allConfigs.size());
-
-            return enabledConfigs;
-
-        } catch (Exception e) {
-            LOG.error("Failed to fetch bulk configs from Kruize", e);
-            return Collections.emptyList();
+        } catch (JsonProcessingException e) {
+            LOG.errorf(e, "Failed to parse bulk configs response from Kruize: %s", e.getOriginalMessage());
+            throw new IllegalStateException("Could not parse bulk configs response from Kruize", e);
         }
+
+        List<BulkConfig> enabledConfigs = allConfigs.stream()
+                .filter(c -> c.getEnabled() != null && c.getEnabled())
+                .collect(Collectors.toList());
+
+        LOG.infof("Fetched %d enabled configs out of %d total configs",
+                enabledConfigs.size(), allConfigs.size());
+
+        return enabledConfigs;
     }
 
     /**
