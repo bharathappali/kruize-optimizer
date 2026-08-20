@@ -22,6 +22,7 @@ import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.kruize.BulkConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -57,7 +58,8 @@ public class BulkConfigService {
      * Fetch all enabled configs from Kruize.
      *
      * @return List of enabled bulk configs
-     * @throws WebApplicationException  if the Kruize HTTP call fails (4xx / 5xx / network)
+     * @throws WebApplicationException  if the Kruize HTTP call fails (4xx / 5xx)
+     * @throws ProcessingException      if the connection to Kruize fails (timeout / handshake)
      * @throws IllegalStateException    if the response body cannot be parsed as a list of BulkConfig
      */
     public List<BulkConfig> getEnabledConfigs() {
@@ -67,6 +69,9 @@ public class BulkConfigService {
         } catch (WebApplicationException e) {
             LOG.errorf(e, "Kruize returned an error response while fetching bulk configs: HTTP %d",
                     e.getResponse().getStatus());
+            throw e;
+        } catch (ProcessingException e) {
+            LOG.errorf(e, "Failed to connect to Kruize while fetching bulk configs: %s", e.getMessage());
             throw e;
         }
 
@@ -146,6 +151,7 @@ public class BulkConfigService {
      *   },
      *   "cluster_name":       "cluster-name",
      *   "datasource":         "datasource-name",
+     *   "experiment_type":    ["container", "namespace"],
      *   "metadata_profile":   "profile-name",
      *   "measurement_duration": "15min",
      *   "recommendation_settings": {
@@ -198,6 +204,11 @@ public class BulkConfigService {
         // Add metadata profile
         if (config.getMetadataProfile() != null && !config.getMetadataProfile().isEmpty()) {
             bulkJob.put("metadata_profile", config.getMetadataProfile());
+        }
+
+        // Add experiment type to support namespace-level experiments
+        if (config.getExperimentTypes() != null && !config.getExperimentTypes().isEmpty()) {
+            bulkJob.put("experiment_type", config.getExperimentTypes());
         }
 
         // Add measurement duration from trial settings
