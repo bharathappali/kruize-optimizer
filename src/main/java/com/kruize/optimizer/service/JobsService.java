@@ -35,14 +35,6 @@ public class JobsService {
     private int totalExperimentsUnique = 0;
 
     /**
-     * Increment the total jobs triggered counter
-     */
-    public synchronized void incrementJobsTriggered() {
-        totalJobsTriggered++;
-        LOG.debugf(MessageConstants.DEBUG_TOTAL_JOBS_TRIGGERED, totalJobsTriggered);
-    }
-
-    /**
      * Increment the total jobs triggered counter for a specific config
      *
      * @param configName Config name
