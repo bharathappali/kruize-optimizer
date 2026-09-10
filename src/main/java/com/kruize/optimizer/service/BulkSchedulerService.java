@@ -294,6 +294,11 @@ public class BulkSchedulerService {
      * @param updatedConfig Updated bulk config
      */
     public void handleConfigUpdate(BulkConfig updatedConfig) {
+        if (updatedConfig == null) {
+            LOG.warn("Ignoring config update: updatedConfig is null");
+            return;
+        }
+
         LOG.infof("Received config update for: %s", updatedConfig.getConfigName());
 
         if (configBasedSchedulingEnabled) {

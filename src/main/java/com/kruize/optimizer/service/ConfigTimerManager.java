@@ -90,9 +90,17 @@ public class ConfigTimerManager {
         LOG.infof("Scheduling config '%s' with interval: %s (initial delay: %dms)",
                 configName, interval, delay);
 
-        // Schedule recurring task
+        // Catch Throwable so scheduleAtFixedRate does not permanently cancel the timer
         ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(
-                () -> executeConfigJob(config),
+                () -> {
+                    try {
+                        executeConfigJob(config);
+                    } catch (Throwable t) {
+                        LOG.errorf(t,
+                                "Unexpected error executing bulk job for config '%s'; timer will continue",
+                                config.getConfigName());
+                    }
+                },
                 delay,
                 interval.toMillis(),
                 TimeUnit.MILLISECONDS

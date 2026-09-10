@@ -252,15 +252,13 @@ public class BulkConfigService {
         try {
             String jsonPayload = objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValueAsString(bulkJob);
-            LOG.infof("Converted config '%s' to bulk job:\n%s",
+            LOG.debugf("Converted config '%s' to bulk job:\n%s",
                     config.getConfigName(), jsonPayload);
         } catch (Exception e) {
-            LOG.warnf(e, "Failed to serialize bulk job for config '%s'",
+            LOG.debugf(e, "Failed to serialize bulk job for config '%s'",
                     config.getConfigName());
         }
 
-        LOG.debugf("Converted config '%s' to bulk job request: %s",
-                config.getConfigName(), bulkJob);
         return bulkJob;
     }
 }
