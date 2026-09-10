@@ -1,5 +1,5 @@
 {
-  "config_name": "default",
+  "config_name": "default-bulk-config",
   "cluster_name": "default",
   "datasources": ["thanos-1"],
   "namespaces": [],

@@ -52,6 +52,10 @@ public class JobsService {
      */
     public synchronized void incrementJobsTriggered(String configName) {
         totalJobsTriggered++;
+        if (configName == null || configName.isBlank()) {
+            LOG.debugf(MessageConstants.DEBUG_TOTAL_JOBS_TRIGGERED, totalJobsTriggered);
+            return;
+        }
         jobsPerConfig.merge(configName, 1, Integer::sum);
         LOG.debugf("Total jobs triggered: %d (Config '%s': %d)",
                 totalJobsTriggered, configName, jobsPerConfig.get(configName));

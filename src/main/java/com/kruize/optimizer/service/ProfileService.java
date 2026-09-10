@@ -429,8 +429,8 @@ public class ProfileService {
                         profilesNode = rootNode.get(ProfilePathConstants.BULK_CONFIGS_KEY);
                         if (profilesNode != null && profilesNode.isArray()) {
                             for (JsonNode profileNode : profilesNode) {
-                                String name = profileNode.get("name").asText();
-                                String version = profileNode.get("profile_version").asText();
+                                String name = profileNode.get(ProfilePathConstants.NAME_KEY).asText();
+                                String version = profileNode.get(ProfilePathConstants.PROFILE_VERSION_KEY).asText();
                                 profiles.put(name, version);
                             }
                         }
