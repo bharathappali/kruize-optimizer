@@ -52,6 +52,10 @@ public class JobsService {
      */
     public synchronized void incrementJobsTriggered(String configName) {
         totalJobsTriggered++;
+        if (configName == null || configName.isBlank()) {
+            LOG.debugf(MessageConstants.DEBUG_TOTAL_JOBS_TRIGGERED, totalJobsTriggered);
+            return;
+        }
         jobsPerConfig.merge(configName, 1, Integer::sum);
         LOG.debugf("Total jobs triggered: %d (Config '%s': %d)",
                 totalJobsTriggered, configName, jobsPerConfig.get(configName));
@@ -121,6 +125,15 @@ public class JobsService {
      */
     public int getTotalExperimentsUnique() {
         return totalExperimentsUnique;
+    }
+
+    /**
+     * Get jobs triggered per profile
+     *
+     * @return Map of profile name to job count
+     */
+    public java.util.Map<String, Integer> getJobsByProfile() {
+        return new java.util.HashMap<>(jobsPerConfig);
     }
 }
 

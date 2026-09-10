@@ -52,6 +52,12 @@ public class BulkSchedulerService {
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    ConfigTimerManager configTimerManager;
+
+    @ConfigProperty(name = "kruize.bulk.config.enabled", defaultValue = "true")
+    boolean configBasedSchedulingEnabled;
+
     @ConfigProperty(name = "kruize.bulk.scheduler.measurement-duration")
     String measurementDuration;
 
@@ -76,6 +82,14 @@ public class BulkSchedulerService {
             
             // Use common function to refresh state and install missing profiles
             kruizeStateService.refreshStateAndInstallProfiles();
+
+            if (configBasedSchedulingEnabled) {
+                // NEW: Initialize config-based timers
+                LOG.info("Config-based scheduling is enabled, initializing config timers...");
+                configTimerManager.initializeConfigs();
+            } else {
+                LOG.info("Config-based scheduling is disabled, using legacy fixed-schedule mode");
+            }
             
             initialized = true;
             LOG.info(MessageConstants.INFO_BULK_SCHEDULER_INITIALIZED);
@@ -93,6 +107,12 @@ public class BulkSchedulerService {
     public void scheduledBulkApiCall() {
         if (!initialized) {
             LOG.debug(MessageConstants.INFO_BULK_SCHEDULER_NOT_INITIALIZED);
+            return;
+        }
+
+        if (configBasedSchedulingEnabled) {
+            // Skip if config-based scheduling is enabled
+            // Configs are managed by ConfigTimerManager
             return;
         }
 
@@ -266,5 +286,6 @@ public class BulkSchedulerService {
             }
         }
     }
+
 }
 
