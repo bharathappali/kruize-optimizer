@@ -16,12 +16,14 @@
 package com.kruize.optimizer.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.kruize.BulkConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -45,6 +47,12 @@ public class BulkConfigService {
     @Inject
     @RestClient
     KruizeClient kruizeClient;
+
+    @Inject
+    ObjectMapper objectMapper;
+
+    @ConfigProperty(name = "kruize.webhook.url")
+    String webhookUrl;
 
     // Regex pattern for parsing scheduling strings like "24h", "15min", "2d"
     private static final Pattern SCHEDULING_PATTERN =
@@ -214,9 +222,9 @@ public class BulkConfigService {
             bulkJob.put("metadata_profile", config.getMetadataProfile());
         }
 
-        // Add experiment type to support namespace-level experiments
+        // Add experiment types to support namespace-level experiments
         if (config.getExperimentTypes() != null && !config.getExperimentTypes().isEmpty()) {
-            bulkJob.put("experiment_type", config.getExperimentTypes());
+            bulkJob.put("experiment_types", config.getExperimentTypes());
         }
 
         // Add measurement duration from trial settings
@@ -227,35 +235,41 @@ public class BulkConfigService {
             }
         }
 
-        // Add recommendation settings (scheduling, terms, models)
-        if (config.getRecommendationSettings() != null) {
-            Map<String, Object> recSettings = new HashMap<>();
-            String scheduling = config.getRecommendationSettings().getScheduling();
-            if (scheduling != null && !scheduling.isEmpty()) {
-                recSettings.put("scheduling", scheduling);
-            }
-            if (config.getRecommendationSettings().getTerms() != null
-                    && !config.getRecommendationSettings().getTerms().isEmpty()) {
-                recSettings.put("terms", config.getRecommendationSettings().getTerms());
-            }
-            if (config.getRecommendationSettings().getModels() != null
-                    && !config.getRecommendationSettings().getModels().isEmpty()) {
-                recSettings.put("models", config.getRecommendationSettings().getModels());
-            }
-            if (!recSettings.isEmpty()) {
-                bulkJob.put("recommendation_settings", recSettings);
-            }
+        // Add model_settings from recommendation settings
+        if (config.getRecommendationSettings() != null &&
+                config.getRecommendationSettings().getModels() != null &&
+                !config.getRecommendationSettings().getModels().isEmpty()) {
+            Map<String, Object> modelSettings = new HashMap<>();
+            modelSettings.put("models", config.getRecommendationSettings().getModels());
+            bulkJob.put("model_settings", modelSettings);
+        }
+
+        // Add term_settings from recommendation settings
+        if (config.getRecommendationSettings() != null &&
+                config.getRecommendationSettings().getTerms() != null &&
+                !config.getRecommendationSettings().getTerms().isEmpty()) {
+            Map<String, Object> termSettings = new HashMap<>();
+            termSettings.put("terms", config.getRecommendationSettings().getTerms());
+            bulkJob.put("term_settings", termSettings);
         }
 
         // Add webhook URL if present
-        if (config.getWebhookUrl() != null && !config.getWebhookUrl().isEmpty()) {
+        if (webhookUrl != null && !webhookUrl.isEmpty()) {
             Map<String, String> webhook = new HashMap<>();
-            webhook.put("url", config.getWebhookUrl());
+            webhook.put("url", webhookUrl);
             bulkJob.put("webhook", webhook);
         }
 
-        LOG.debugf("Converted config '%s' to bulk job request: %s",
-                config.getConfigName(), bulkJob);
+        // Log the complete bulk job JSON
+        try {
+            String jsonPayload = objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(bulkJob);
+            LOG.debugf("Converted config '%s' to bulk job:\n%s",
+                    config.getConfigName(), jsonPayload);
+        } catch (Exception e) {
+            LOG.debugf(e, "Failed to serialize bulk job for config '%s'",
+                    config.getConfigName());
+        }
 
         return bulkJob;
     }
