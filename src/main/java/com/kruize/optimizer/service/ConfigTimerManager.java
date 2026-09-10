@@ -35,6 +35,7 @@ import java.util.concurrent.*;
 public class ConfigTimerManager {
 
     private static final Logger LOG = Logger.getLogger(ConfigTimerManager.class);
+    private static final int SCHEDULER_THREAD_POOL_SIZE = 10;
 
     @Inject
     BulkConfigService bulkConfigService;
@@ -50,7 +51,7 @@ public class ConfigTimerManager {
     private final Map<String, ScheduledFuture<?>> configTimers = new ConcurrentHashMap<>();
 
     // Scheduler for executing timers
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SCHEDULER_THREAD_POOL_SIZE);
 
     /**
      * Schedule a timer for a config
@@ -59,6 +60,12 @@ public class ConfigTimerManager {
      */
     public void scheduleConfig(BulkConfig config) {
         String configName = config.getConfigName();
+
+        if (config.getRecommendationSettings() == null
+                || config.getRecommendationSettings().getScheduling() == null) {
+            LOG.warnf("Config '%s' has no recommendation_settings or scheduling, skipping", configName);
+            return;
+        }
 
         // Cancel existing timer if any
         cancelConfigTimer(configName);
@@ -106,6 +113,13 @@ public class ConfigTimerManager {
             return;
         }
 
+        if (updatedConfig.getRecommendationSettings() == null
+                || updatedConfig.getRecommendationSettings().getScheduling() == null) {
+            LOG.warnf("Config '%s' has no recommendation_settings or scheduling, canceling timer", configName);
+            cancelConfigTimer(configName);
+            return;
+        }
+
         // Calculate new interval
         Duration newInterval = bulkConfigService.parseScheduling(
                 updatedConfig.getRecommendationSettings().getScheduling()
@@ -118,15 +132,14 @@ public class ConfigTimerManager {
             // New interval is shorter - execute immediately and reschedule
             LOG.infof("Config '%s' interval shortened from %dms to %dms, executing immediately",
                     configName, delayMillis, newInterval.toMillis());
-            cancelConfigTimer(configName);
-            scheduleConfig(updatedConfig);
         } else {
             // New interval is longer or similar - just reschedule for next run
             LOG.infof("Config '%s' interval changed to %s, rescheduling",
                     configName, newInterval);
-            cancelConfigTimer(configName);
-            scheduleConfig(updatedConfig);
         }
+
+        cancelConfigTimer(configName);
+        scheduleConfig(updatedConfig);
     }
 
     /**
@@ -161,7 +174,8 @@ public class ConfigTimerManager {
                     config.getConfigName(), response);
 
             // Track job with config name
-            jobsService.incrementJobsTriggered(config.getConfigName());
+            //TODO: to be updated
+            jobsService.incrementJobsTriggered();
 
         } catch (Exception e) {
             LOG.errorf(e, "Failed to execute bulk job for config '%s'",
