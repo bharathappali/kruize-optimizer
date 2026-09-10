@@ -16,6 +16,7 @@
 package com.kruize.optimizer.service;
 
 import com.kruize.optimizer.model.WebhookPayload;
+import com.kruize.optimizer.model.kruize.BulkConfig;
 import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import com.kruize.optimizer.utils.OptimizerConstants.WebhookConstants;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -106,5 +107,20 @@ public class BulkSchedulerService {
      */
     public boolean isInitialized() {
         return initialized;
+    }
+
+    /**
+     * Handle config update webhook from Kruize
+     *
+     * @param updatedConfig Updated bulk config
+     */
+    public void handleConfigUpdate(BulkConfig updatedConfig) {
+        if (updatedConfig == null) {
+            LOG.warn("Ignoring config update: updatedConfig is null");
+            return;
+        }
+
+        LOG.infof("Received config update for: %s", updatedConfig.getConfigName());
+        configTimerManager.updateConfigTimer(updatedConfig);
     }
 }
