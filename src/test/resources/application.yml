@@ -20,7 +20,7 @@ kruize:
     datasource: prometheus-1
     metadata-profile: cluster-metadata-local-monitoring
     metric-profile: resource-optimization-local-monitoring
-  
+
   # Webhook configuration
   webhook:
     url: http://kruize-optimizer:8080/webhook
