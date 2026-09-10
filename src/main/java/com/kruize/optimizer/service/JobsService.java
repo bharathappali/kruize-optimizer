@@ -38,14 +38,6 @@ public class JobsService {
     private final java.util.Map<String, Integer> jobsPerConfig = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
-     * Increment the total jobs triggered counter
-     */
-    public synchronized void incrementJobsTriggered() {
-        totalJobsTriggered++;
-        LOG.debugf(MessageConstants.DEBUG_TOTAL_JOBS_TRIGGERED, totalJobsTriggered);
-    }
-
-    /**
      * Increment the total jobs triggered counter for a specific config
      *
      * @param configName Config name
