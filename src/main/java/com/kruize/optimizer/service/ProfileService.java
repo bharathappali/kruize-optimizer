@@ -71,7 +71,7 @@ public class ProfileService {
             if (e.getResponse().getStatus() == 400) {
                 try {
                     String responseBody = e.getResponse().readEntity(String.class);
-                    if (responseBody != null && responseBody.contains("No metadata profiles found!")) {
+                    if (responseBody != null && responseBody.contains(MessageConstants.NO_METADATA_PROFILES_FOUND)) {
                         LOG.info("No metadata profiles found in Kruize, returning empty list");
                         return Collections.emptyList();
                     }
@@ -116,7 +116,7 @@ public class ProfileService {
             if (e.getResponse().getStatus() == 400) {
                 try {
                     String responseBody = e.getResponse().readEntity(String.class);
-                    if (responseBody != null && responseBody.contains("No metric profiles found!")) {
+                    if (responseBody != null && responseBody.contains(MessageConstants.NO_METRIC_PROFILES_FOUND)) {
                         LOG.info("No metric profiles found in Kruize, returning empty list");
                         return Collections.emptyList();
                     }
@@ -159,7 +159,7 @@ public class ProfileService {
             if (e.getResponse().getStatus() == 400) {
                 try {
                     String responseBody = e.getResponse().readEntity(String.class);
-                    if (responseBody != null && responseBody.contains("No layers found!")) {
+                    if (responseBody != null && responseBody.contains(MessageConstants.NO_LAYERS_FOUND)) {
                         LOG.info("No layers found in Kruize, returning empty list");
                         return Collections.emptyList();
                     }
@@ -212,7 +212,7 @@ public class ProfileService {
             if (e.getResponse().getStatus() == 400) {
                 try {
                     String responseBody = e.getResponse().readEntity(String.class);
-                    if (responseBody != null && responseBody.contains("No bulk configs found")) {
+                    if (responseBody != null && responseBody.contains(MessageConstants.NO_BULK_CONFIGS_FOUND)) {
                         LOG.info("No bulk configs found in Kruize, returning empty list");
                         return Collections.emptyList();
                     }

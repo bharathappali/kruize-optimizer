@@ -144,6 +144,10 @@ public final class OptimizerConstants {
         // Info messages
         public static final String NO_DATASOURCES_FOUND = "No datasources found";
         public static final String NO_PROFILES_FOUND = "No profiles found";
+        public static final String NO_METADATA_PROFILES_FOUND = "No metadata profiles found!";
+        public static final String NO_METRIC_PROFILES_FOUND = "No metric profiles found!";
+        public static final String NO_LAYERS_FOUND = "No layers found!";
+        public static final String NO_BULK_CONFIGS_FOUND = "No bulk configs found";
         public static final String PROFILE_ALREADY_EXISTS = "Profile already exists";
         public static final String PROFILE_NOT_FOUND = "Profile not found in local repository";
         public static final String INFO_FETCHING_JOBS_OVERVIEW = "Fetching jobs overview";
