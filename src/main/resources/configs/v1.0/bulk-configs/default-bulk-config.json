@@ -13,7 +13,7 @@
     "measurement_duration": "15min"
   },
   "recommendation_settings": {
-    "scheduling": "1h",
+    "scheduling": "15min",
     "terms": ["short"],
     "models": ["performance"]
   },
