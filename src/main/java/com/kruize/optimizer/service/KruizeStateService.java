@@ -98,15 +98,15 @@ public class KruizeStateService {
             LOG.info("Installing missing profiles...");
             
             // Install missing metadata profiles
-            List<String> metadataResults = profileService.installMissingProfiles("metadata");
+            List<String> metadataResults = profileService.installMissingProfiles(OptimizerConstants.ProfileType.METADATA);
             metadataResults.forEach(result -> LOG.info("Metadata profile: " + result));
             
             // Install missing metric profiles
-            List<String> metricResults = profileService.installMissingProfiles("metric");
+            List<String> metricResults = profileService.installMissingProfiles(OptimizerConstants.ProfileType.METRIC);
             metricResults.forEach(result -> LOG.info("Metric profile: " + result));
             
             // Install missing layers
-            List<String> layerResults = profileService.installMissingProfiles("layer");
+            List<String> layerResults = profileService.installMissingProfiles(OptimizerConstants.ProfileType.LAYER);
             layerResults.forEach(result -> LOG.info("Layer: " + result));
 
             // Install missing bulk configs
