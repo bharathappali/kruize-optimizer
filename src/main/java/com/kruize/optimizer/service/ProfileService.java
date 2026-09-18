@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.kruize.optimizer.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.exception.KruizeServiceException;
@@ -192,12 +191,9 @@ public class ProfileService {
     public List<KruizeProfile> getBulkConfigs() {
         try {
             LOG.info("Fetching bulk configs from Kruize");
-            String response = kruizeClient.getBulkConfigs(null);
-            List<BulkConfig> bulkConfigs = objectMapper.readValue(
-                    response,
-                    new TypeReference<List<BulkConfig>>() {}
-            );
-            
+            List<BulkConfig> bulkConfigs = Optional.ofNullable(kruizeClient.getBulkConfigs(null))
+                    .orElse(Collections.emptyList());
+
             // Convert BulkConfig to KruizeProfile
             List<KruizeProfile> profiles = bulkConfigs.stream()
                     .map(bc -> {
