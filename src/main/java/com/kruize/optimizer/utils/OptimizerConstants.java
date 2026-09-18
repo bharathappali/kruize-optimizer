@@ -144,6 +144,10 @@ public final class OptimizerConstants {
         // Info messages
         public static final String NO_DATASOURCES_FOUND = "No datasources found";
         public static final String NO_PROFILES_FOUND = "No profiles found";
+        public static final String NO_METADATA_PROFILES_FOUND = "No metadata profiles found!";
+        public static final String NO_METRIC_PROFILES_FOUND = "No metric profiles found!";
+        public static final String NO_LAYERS_FOUND = "No layers found!";
+        public static final String NO_BULK_CONFIGS_FOUND = "No bulk configs found";
         public static final String PROFILE_ALREADY_EXISTS = "Profile already exists";
         public static final String PROFILE_NOT_FOUND = "Profile not found in local repository";
         public static final String INFO_FETCHING_JOBS_OVERVIEW = "Fetching jobs overview";
@@ -229,6 +233,7 @@ public final class OptimizerConstants {
         public static final String METADATA = "metadata";
         public static final String METRIC = "metric";
         public static final String LAYER = "layer";
+        public static final String BULK = "bulk_config";
     }
 
     // contains profile path constants
@@ -242,12 +247,14 @@ public final class OptimizerConstants {
         public static final String CONFIGS_INDEX_FILE = "configs/configsReferenceIndex.json";
         public static final String METADATA_PROFILES_DIR = "/metadata-profiles/";
         public static final String METRIC_PROFILES_DIR = "/metric-profiles/";
+        public static final String BULK_CONFIGS_DIR = "/bulk-configs/";
         public static final String LAYERS_DIR = "configs/layers/";
         public static final String JSON_EXTENSION = ".json";
         
         // JSON field names in configsReferenceIndex.json
         public static final String METADATA_PROFILES_KEY = "metadata_profiles";
         public static final String METRIC_PROFILES_KEY = "metric_profiles";
+        public static final String BULK_CONFIGS_KEY = "bulk_configs";
         public static final String LAYERS_KEY = "layers";
         public static final String NAME_KEY = "name";
         public static final String PROFILE_VERSION_KEY = "profile_version";
