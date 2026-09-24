@@ -16,8 +16,6 @@
 package com.kruize.optimizer.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kruize.optimizer.client.KruizeClient;
 import com.kruize.optimizer.model.kruize.BulkConfig;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,6 +26,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +46,6 @@ public class BulkConfigService {
     @RestClient
     KruizeClient kruizeClient;
 
-    @Inject
-    ObjectMapper objectMapper;
-
     // Regex pattern for parsing scheduling strings like "24h", "15min", "2d"
     private static final Pattern SCHEDULING_PATTERN =
             Pattern.compile("(\\d+)\\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|d|day|days)");
@@ -60,30 +56,27 @@ public class BulkConfigService {
      * @return List of enabled bulk configs
      * @throws WebApplicationException  if the Kruize HTTP call fails (4xx / 5xx)
      * @throws ProcessingException      if the connection to Kruize fails (timeout / handshake)
-     * @throws IllegalStateException    if the response body cannot be parsed as a list of BulkConfig
+     * @throws IllegalStateException    if the response body cannot be deserialized as a list of BulkConfig
      */
     public List<BulkConfig> getEnabledConfigs() {
-        String response;
+        List<BulkConfig> allConfigs;
         try {
-            response = kruizeClient.getBulkConfigs(null);
+            allConfigs = kruizeClient.getBulkConfigs(null);
         } catch (WebApplicationException e) {
             LOG.errorf(e, "Kruize returned an error response while fetching bulk configs: HTTP %d",
                     e.getResponse().getStatus());
             throw e;
         } catch (ProcessingException e) {
+            if (isDeserializationFailure(e)) {
+                LOG.errorf(e, "Failed to parse bulk configs response from Kruize: %s", e.getMessage());
+                throw new IllegalStateException("Could not parse bulk configs response from Kruize", e);
+            }
             LOG.errorf(e, "Failed to connect to Kruize while fetching bulk configs: %s", e.getMessage());
             throw e;
         }
 
-        List<BulkConfig> allConfigs;
-        try {
-            allConfigs = objectMapper.readValue(
-                    response,
-                    new TypeReference<List<BulkConfig>>() {}
-            );
-        } catch (JsonProcessingException e) {
-            LOG.errorf(e, "Failed to parse bulk configs response from Kruize: %s", e.getOriginalMessage());
-            throw new IllegalStateException("Could not parse bulk configs response from Kruize", e);
+        if (allConfigs == null) {
+            allConfigs = Collections.emptyList();
         }
 
         List<BulkConfig> enabledConfigs = allConfigs.stream()
@@ -94,6 +87,21 @@ public class BulkConfigService {
                 enabledConfigs.size(), allConfigs.size());
 
         return enabledConfigs;
+    }
+
+    /**
+     * REST client deserialization failures are raised as ProcessingException whose cause
+     * chain contains a Jackson parse/mapping error. Connection failures do not.
+     */
+    private static boolean isDeserializationFailure(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current instanceof JsonProcessingException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /**
