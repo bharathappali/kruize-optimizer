@@ -120,7 +120,13 @@ public class BulkSchedulerService {
             return;
         }
 
-        LOG.infof("Received config update for: %s", updatedConfig.getConfigName());
+        String configName = updatedConfig.getConfigName();
+        if (configName == null || configName.isBlank()) {
+            LOG.warn("Ignoring config update: configName is null or blank");
+            return;
+        }
+
+        LOG.infof("Received config update for: %s", configName);
         configTimerManager.updateConfigTimer(updatedConfig);
     }
 }
