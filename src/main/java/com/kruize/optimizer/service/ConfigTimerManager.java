@@ -207,8 +207,7 @@ public class ConfigTimerManager {
                     config.getConfigName(), response);
 
             // Track job with config name
-            //TODO: to be updated
-            jobsService.incrementJobsTriggered();
+            jobsService.incrementJobsTriggered(config.getConfigName());
 
         } catch (Exception e) {
             LOG.errorf(e, "Failed to execute bulk job for config '%s'",

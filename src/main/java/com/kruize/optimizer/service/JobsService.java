@@ -20,6 +20,10 @@ import com.kruize.optimizer.utils.OptimizerConstants.MessageConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Service for managing bulk job statistics
  */
@@ -33,6 +37,7 @@ public class JobsService {
     private int totalExperimentsCreated = 0;
     private int totalExperimentsProcessed = 0;
     private int totalExperimentsUnique = 0;
+    private final Map<String, Integer> jobsPerConfig = new ConcurrentHashMap<>();
 
     /**
      * Increment the total jobs triggered counter for a specific config
@@ -121,8 +126,8 @@ public class JobsService {
      *
      * @return Map of profile name to job count
      */
-    public java.util.Map<String, Integer> getJobsByProfile() {
-        return new java.util.HashMap<>(jobsPerConfig);
+    public Map<String, Integer> getJobsByProfile() {
+        return new HashMap<>(jobsPerConfig);
     }
 }
 
