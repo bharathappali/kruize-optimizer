@@ -150,8 +150,10 @@ public class ConfigTimerManager {
         if (updatedConfig.getRecommendationSettings() == null
                 || updatedConfig.getRecommendationSettings().getScheduling() == null
                 || updatedConfig.getRecommendationSettings().getScheduling().isBlank()) {
-            LOG.errorf("Cannot update timer for config '%s': recommendation_settings.scheduling is missing",
-                    configName);
+            // No schedule means no timer, matching startup. A malformed value is handled below
+            // and keeps the last good timer.
+            LOG.infof("Config '%s' has no scheduling, canceling timer", configName);
+            cancelConfigTimer(configName);
             return;
         }
 

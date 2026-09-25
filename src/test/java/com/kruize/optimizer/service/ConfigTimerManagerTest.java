@@ -85,6 +85,31 @@ class ConfigTimerManagerTest {
     }
 
     @Test
+    void updateConfigTimerCancelsWhenSchedulingIsRemoved() {
+        BulkConfig original = config("daily", "1h", true);
+        configTimerManager.scheduleConfig(original, TimeUnit.HOURS.toMillis(1));
+        assertEquals(1, configTimerManager.getActiveTimerCount());
+
+        BulkConfig blankScheduling = config("daily", "  ", true);
+        configTimerManager.updateConfigTimer(blankScheduling);
+        assertEquals(0, configTimerManager.getActiveTimerCount());
+
+        configTimerManager.scheduleConfig(original, TimeUnit.HOURS.toMillis(1));
+        BulkConfig nullScheduling = config("daily", "1h", true);
+        nullScheduling.setRecommendationSettings(
+                new RecommendationSettings(null, List.of("short_term"), List.of("cost")));
+        configTimerManager.updateConfigTimer(nullScheduling);
+        assertEquals(0, configTimerManager.getActiveTimerCount());
+
+        configTimerManager.scheduleConfig(original, TimeUnit.HOURS.toMillis(1));
+        BulkConfig missingSettings = config("daily", "1h", true);
+        missingSettings.setRecommendationSettings(null);
+        configTimerManager.updateConfigTimer(missingSettings);
+        assertEquals(0, configTimerManager.getActiveTimerCount());
+        verify(kruizeClient, never()).bulkCreateExperiments(any());
+    }
+
+    @Test
     void updateConfigTimerKeepsExistingTimerWhenSchedulingIsInvalid() {
         BulkConfig original = config("daily", "1h", true);
         configTimerManager.scheduleConfig(original, TimeUnit.HOURS.toMillis(1));
