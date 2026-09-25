@@ -122,11 +122,11 @@ public class JobsService {
     }
 
     /**
-     * Get jobs triggered per profile
+     * Get jobs triggered per config
      *
-     * @return Map of profile name to job count
+     * @return Map of config name to job count
      */
-    public Map<String, Integer> getJobsByProfile() {
+    public Map<String, Integer> getJobsByConfig() {
         return new HashMap<>(jobsPerConfig);
     }
 }

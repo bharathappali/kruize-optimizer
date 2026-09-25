@@ -131,6 +131,9 @@ public class BulkConfigService {
 
         int value = Integer.parseInt(matcher.group(1));
         String unit = matcher.group(2);
+        if (value <= 0) {
+            throw new IllegalArgumentException("Scheduling interval must be positive: " + scheduling);
+        }
 
         switch (unit) {
             case "h":
@@ -165,15 +168,16 @@ public class BulkConfigService {
      *       "labels":     {"key": "value"}
      *     }
      *   },
-     *   "cluster_name":       "cluster-name",
-     *   "datasource":         "datasource-name",
-     *   "experiment_type":    ["container", "namespace"],
-     *   "metadata_profile":   "profile-name",
+     *   "cluster_name":         "cluster-name",
+     *   "datasource":           "datasource-name",
+     *   "experiment_types":     ["container", "namespace"],
+     *   "metadata_profile":     "profile-name",
      *   "measurement_duration": "15min",
-     *   "recommendation_settings": {
-     *     "scheduling": "24h",
-     *     "terms":  ["short_term"],
+     *   "model_settings": {
      *     "models": ["cost"]
+     *   },
+     *   "term_settings": {
+     *     "terms": ["short_term"]
      *   },
      *   "webhook": {
      *     "url": "http://..."
