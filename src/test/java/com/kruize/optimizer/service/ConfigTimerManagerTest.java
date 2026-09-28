@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -75,6 +76,15 @@ class ConfigTimerManagerTest {
         configTimerManager.initializeConfigs();
 
         assertEquals(2, configTimerManager.getActiveTimerCount());
+    }
+
+    @Test
+    void initializeConfigsPropagatesConfigFetchFailure() {
+        doThrow(new IllegalStateException("Kruize unreachable"))
+                .when(bulkConfigService).getEnabledConfigs();
+
+        assertThrows(IllegalStateException.class, () -> configTimerManager.initializeConfigs());
+        assertEquals(0, configTimerManager.getActiveTimerCount());
     }
 
     @Test

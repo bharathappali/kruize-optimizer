@@ -23,8 +23,9 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Orchestrates bulk-config scheduling: installs/refreshes Kruize state,
@@ -44,8 +45,19 @@ public class BulkSchedulerService {
     @Inject
     ConfigTimerManager configTimerManager;
 
-    private final Set<String> completedJobs = Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
-    private volatile boolean initialized = false;
+    // Most recent completion ids. Older ids are dropped so a long-running process
+    // does not retain every job id since startup. A webhook for an evicted id is applied again.
+    static final int DEFAULT_COMPLETED_JOB_ID_LIMIT = 10_000;
+    int completedJobIdLimit = DEFAULT_COMPLETED_JOB_ID_LIMIT;
+
+    final Map<String, Boolean> completedJobs = Collections.synchronizedMap(
+            new LinkedHashMap<>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+                    return size() > completedJobIdLimit;
+                }
+            });
+    volatile boolean initialized = false;
 
     /**
      * Initialize by refreshing state, installing missing profiles/configs,
@@ -81,7 +93,7 @@ public class BulkSchedulerService {
                 LOG.debugf(MessageConstants.INFO_RECEIVED_WEBHOOK_FOR_JOB, jobId, status);
 
                 if (WebhookConstants.STATUS_COMPLETED.equalsIgnoreCase(status)) {
-                    if (!completedJobs.add(jobId)) {
+                    if (completedJobs.putIfAbsent(jobId, Boolean.TRUE) != null) {
                         LOG.infof(MessageConstants.INFO_JOB_ALREADY_PROCESSED, jobId);
                         continue;
                     }

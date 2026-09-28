@@ -240,31 +240,28 @@ public class ConfigTimerManager {
     }
 
     /**
-     * Initialize all configs at startup
+     * Initialize all configs at startup.
+     * A failure to load the config list propagates so startup does not report success
+     * with no timers. One config that cannot be scheduled does not stop the others.
      */
     public void initializeConfigs() {
-        try {
-            LOG.info("Initializing config timers...");
+        LOG.info("Initializing config timers...");
 
-            List<BulkConfig> configs = bulkConfigService.getEnabledConfigs();
+        List<BulkConfig> configs = bulkConfigService.getEnabledConfigs();
 
-            LOG.infof("Found %d enabled configs", configs.size());
+        LOG.infof("Found %d enabled configs", configs.size());
 
-            for (BulkConfig config : configs) {
-                try {
-                    scheduleConfig(config);
-                } catch (Exception e) {
-                    String configName = config != null ? config.getConfigName() : null;
-                    LOG.errorf(e, "Failed to schedule config '%s'; continuing with remaining configs",
-                            configName);
-                }
+        for (BulkConfig config : configs) {
+            try {
+                scheduleConfig(config);
+            } catch (Exception e) {
+                String configName = config != null ? config.getConfigName() : null;
+                LOG.errorf(e, "Failed to schedule config '%s'; continuing with remaining configs",
+                        configName);
             }
-
-            LOG.infof("Config timers initialized with %d active timer(s)", configTimers.size());
-
-        } catch (Exception e) {
-            LOG.error("Failed to initialize config timers", e);
         }
+
+        LOG.infof("Config timers initialized with %d active timer(s)", configTimers.size());
     }
 
     /**
