@@ -123,6 +123,20 @@ class ConfigTimerManagerTest {
     }
 
     @Test
+    void updateConfigTimerKeepsExistingTimerWhenScheduleIsRejected() {
+        BulkConfig original = config("daily", "1h", true);
+        configTimerManager.scheduleConfig(original, TimeUnit.HOURS.toMillis(1));
+        assertEquals(1, configTimerManager.getActiveTimerCount());
+
+        configTimerManager.scheduler.shutdown();
+
+        configTimerManager.updateConfigTimer(config("daily", "2h", true));
+
+        assertEquals(1, configTimerManager.getActiveTimerCount());
+        verify(kruizeClient, never()).bulkCreateExperiments(any());
+    }
+
+    @Test
     void updateConfigTimerPreservesRemainingDelay() {
         BulkConfig original = config("daily", "1h", true);
         configTimerManager.scheduleConfig(original, TimeUnit.HOURS.toMillis(1));

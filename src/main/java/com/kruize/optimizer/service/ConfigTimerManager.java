@@ -51,7 +51,7 @@ public class ConfigTimerManager {
     private final Map<String, ScheduledFuture<?>> configTimers = new ConcurrentHashMap<>();
 
     // Scheduler for executing timers
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SCHEDULER_THREAD_POOL_SIZE);
+    final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SCHEDULER_THREAD_POOL_SIZE);
 
     /**
      * Schedule a timer for a config (executes immediately, then on interval)
@@ -93,16 +93,16 @@ public class ConfigTimerManager {
             return;
         }
 
-        // Replace any existing timer only after the new interval is known to be usable
-        cancelConfigTimer(configName);
-
         long delay = Math.max(0, initialDelayMillis);
         LOG.infof("Scheduling config '%s' with interval: %s (initial delay: %dms)",
                 configName, interval, delay);
 
+        // Schedule first. Cancel the previous timer only after the new one is accepted,
+        // so a rejection (for example during shutdown) leaves the running timer in place.
+        ScheduledFuture<?> future;
         try {
-            // Catch Throwable so scheduleAtFixedRate does not permanently cancel the timer
-            ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(
+            // Catch Throwable so a job failure does not suppress later executions
+            future = scheduler.scheduleAtFixedRate(
                     () -> {
                         try {
                             executeConfigJob(config);
@@ -116,9 +116,15 @@ public class ConfigTimerManager {
                     interval.toMillis(),
                     TimeUnit.MILLISECONDS
             );
-            configTimers.put(configName, future);
         } catch (RuntimeException e) {
-            LOG.errorf(e, "Failed to schedule config '%s'", configName);
+            LOG.errorf(e, "Failed to schedule config '%s'; existing timer left unchanged", configName);
+            return;
+        }
+
+        ScheduledFuture<?> previous = configTimers.put(configName, future);
+        if (previous != null) {
+            previous.cancel(false);
+            LOG.infof("Replaced timer for config '%s'", configName);
         }
     }
 
@@ -172,10 +178,9 @@ public class ConfigTimerManager {
             return;
         }
 
-        // Get time until next execution (may be negative if currently running)
+        // Get time until next execution (may be negative if currently running).
+        // scheduleConfig replaces this timer only after the new one is accepted.
         long delayMillis = Math.max(0, currentTimer.getDelay(TimeUnit.MILLISECONDS));
-
-        cancelConfigTimer(configName);
 
         if (delayMillis > newInterval.toMillis()) {
             // Remaining wait exceeds new interval - run soon, then use new period
