@@ -73,7 +73,7 @@ class ConfigTimerManagerTest {
                 config("good-after", "2h", true)
         )).when(bulkConfigService).getEnabledConfigs();
 
-        configTimerManager.initializeConfigs();
+        configTimerManager.initializeConfigs(); 
 
         assertEquals(2, configTimerManager.getActiveTimerCount());
     }
