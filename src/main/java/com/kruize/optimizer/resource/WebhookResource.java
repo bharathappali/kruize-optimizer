@@ -100,7 +100,7 @@ public class WebhookResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response receiveConfigUpdate(BulkConfig config) {
-        LOG.infof("Received config update webhook for: %s",
+        LOG.debugf("Received config update webhook for: %s",
                 config != null ? config.getConfigName() : "null");
 
         // Validate config
