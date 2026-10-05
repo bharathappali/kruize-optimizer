@@ -307,9 +307,9 @@ class WebhookResourceTest {
     }
 
     /**
-     * Test successful config-update webhook
+     * Test successful bulk config update webhook
      *
-     * Test Description: Verifies that POST /webhook/config-update accepts a bulk config
+     * Test Description: Verifies that POST /webhook/config/bulk accepts a bulk config
      * with a name and delegates it to the scheduler.
      *
      * Test Payload:
@@ -329,7 +329,7 @@ class WebhookResourceTest {
             .contentType(ContentType.JSON)
             .body(config)
             .when()
-            .post("/webhook/config-update")
+            .post("/webhook/config/bulk")
             .then()
             .statusCode(200);
 
@@ -338,7 +338,7 @@ class WebhookResourceTest {
     }
 
     /**
-     * Test config-update webhook with a null body
+     * Test bulk config update webhook with a null body
      *
      * Test Description: Verifies that a null config is rejected before the scheduler is called.
      *
@@ -353,7 +353,7 @@ class WebhookResourceTest {
             .contentType(ContentType.JSON)
             .body("null")
             .when()
-            .post("/webhook/config-update")
+            .post("/webhook/config/bulk")
             .then()
             .statusCode(400)
             .body(equalTo(MessageConstants.VALIDATION_ERROR_CONFIG_NAME_REQUIRED));
@@ -362,7 +362,7 @@ class WebhookResourceTest {
     }
 
     /**
-     * Test config-update webhook with a missing config name
+     * Test bulk config update webhook with a missing config name
      *
      * Test Description: Verifies that a config object without config_name is rejected.
      *
@@ -376,7 +376,7 @@ class WebhookResourceTest {
             .contentType(ContentType.JSON)
             .body("{}")
             .when()
-            .post("/webhook/config-update")
+            .post("/webhook/config/bulk")
             .then()
             .statusCode(400)
             .body(equalTo(MessageConstants.VALIDATION_ERROR_CONFIG_NAME_REQUIRED));
@@ -385,7 +385,7 @@ class WebhookResourceTest {
     }
 
     /**
-     * Test config-update webhook with a blank config name
+     * Test bulk config update webhook with a blank config name
      *
      * Test Description: Verifies that a whitespace-only config_name is rejected.
      *
@@ -399,7 +399,7 @@ class WebhookResourceTest {
             .contentType(ContentType.JSON)
             .body("{\"config_name\": \"   \"}")
             .when()
-            .post("/webhook/config-update")
+            .post("/webhook/config/bulk")
             .then()
             .statusCode(400)
             .body(equalTo(MessageConstants.VALIDATION_ERROR_CONFIG_NAME_REQUIRED));
@@ -408,7 +408,7 @@ class WebhookResourceTest {
     }
 
     /**
-     * Test config-update webhook when the scheduler fails
+     * Test bulk config update webhook when the scheduler fails
      *
      * Test Description: Verifies that an exception from handleConfigUpdate is returned as
      * an HTTP 500 and includes the failure message.
@@ -427,7 +427,7 @@ class WebhookResourceTest {
             .contentType(ContentType.JSON)
             .body(config)
             .when()
-            .post("/webhook/config-update")
+            .post("/webhook/config/bulk")
             .then()
             .statusCode(500)
             .body(equalTo(String.format(MessageConstants.ERROR_PROCESSING_CONFIG_UPDATE_WEBHOOK_WITH_MESSAGE, "timer failed")));

@@ -92,6 +92,7 @@ public final class OptimizerConstants {
 
         // Webhook endpoint
         public static final String WEBHOOK_PATH = "/webhook";
+        public static final String WEBHOOK_CONFIG_BULK_PATH = "/config/bulk";
     }
 
     // contains generic constants related to Optimizer application

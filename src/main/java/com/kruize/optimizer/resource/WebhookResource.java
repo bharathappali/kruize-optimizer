@@ -32,7 +32,11 @@ import org.jboss.logging.Logger;
 import java.util.List;
 
 /**
- * REST resource for handling webhook callbacks from Kruize bulk API
+ * REST resource for handling webhook notifications from Kruize.
+ * <ul>
+ *   <li>{@code POST /webhook} — receives bulk-job completion payloads from Kruize</li>
+ *   <li>{@code POST /webhook/config/bulk} — receives bulk config update notifications from Kruize</li>
+ * </ul>
  */
 @Path(OptimizerApiConstants.WEBHOOK_PATH)
 public class WebhookResource {
@@ -43,10 +47,12 @@ public class WebhookResource {
     BulkSchedulerService bulkSchedulerService;
 
     /**
-     * Receive webhook callback from Kruize bulk API
+     * Receives bulk-job completion callbacks from Kruize ({@code POST /webhook}).
+     * Expects a non-empty list of {@link WebhookPayload} objects, each with a non-null
+     * summary and a non-blank jobId.
      *
-     * @param payload List of webhook payloads
-     * @return HTTP response
+     * @param payload list of webhook payloads sent by Kruize upon job completion
+     * @return 200 OK on success, 400 Bad Request for invalid input, 500 on processing error
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -90,13 +96,15 @@ public class WebhookResource {
     }
 
     /**
-     * Receive config update webhook from Kruize
+     * Receives bulk config update notifications from Kruize ({@code POST /webhook/config/bulk}).
+     * Kruize calls this endpoint when a bulk config changes, allowing the scheduler to
+     * adjust its timers without requiring a full restart.
      *
-     * @param config Updated bulk config
-     * @return HTTP response
+     * @param config the updated {@link BulkConfig} sent by Kruize; must have a non-blank config_name
+     * @return 200 OK on success, 400 Bad Request for invalid input, 500 on processing error
      */
     @POST
-    @Path("/config-update")
+    @Path(OptimizerApiConstants.WEBHOOK_CONFIG_BULK_PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response receiveConfigUpdate(BulkConfig config) {
